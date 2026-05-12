@@ -1,0 +1,11 @@
+Re-enable SMB Signing, run this single command:
+
+Set-SmbServerConfiguration -RequireSecuritySignature $true -EnableSecuritySignature $true -Force
+
+Verification:
+
+Get-SmbServerConfiguration | Select RequireSecuritySignature, EnableSecuritySignature
+
+Restore LAN Manager Authentication Level to secure default, run this single command:
+
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LmCompatibilityLevel /t REG_DWORD /d 5 /f
