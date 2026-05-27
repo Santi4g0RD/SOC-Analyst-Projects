@@ -1,0 +1,48 @@
+<Sysmon schemaversion="4.90">
+  <HashAlgorithms>md5,sha256,IMPHASH</HashAlgorithms>
+  <EventFiltering>
+
+    <!-- Process Create (Event ID 1) -->
+    <RuleGroup name="" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Registry value set (Event ID 13) — captures persistence via Run keys -->
+    <RuleGroup name="" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">CurrentVersion\RunOnce</TargetObject>
+        <TargetObject condition="contains">Winlogon</TargetObject>
+        <TargetObject condition="contains">CurrentVersion\Image File Execution Options</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- Network connections (Event ID 3) -->
+    <RuleGroup name="" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- File creation (Event ID 11) -->
+    <RuleGroup name="" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="contains">\AppData\Roaming</TargetFilename>
+        <TargetFilename condition="contains">\AppData\Local\Temp</TargetFilename>
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.vbs</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- Process access (Event ID 10) -->
+    <RuleGroup name="" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="end with">lsass.exe</TargetImage>
+      </ProcessAccess>
+    </RuleGroup>
+
+  </EventFiltering>
+</Sysmon>
