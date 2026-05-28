@@ -50,24 +50,77 @@ RDP into the VM and run in PowerShell (as Administrator):
 Invoke-WebRequest -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile "$env:TEMP\Sysmon.zip"
 Expand-Archive "$env:TEMP\Sysmon.zip" -DestinationPath "$env:TEMP\Sysmon"
 
+# Copy config to Sysmon directory
+Copy-Item "$PSScriptRoot\sysmon-config.xml" -Destination "$env:TEMP\Sysmon\sysmon-config.xml"
+
 # Install with config
-cd "$env:TEMP\Sysmon"
-.\Sysmon64.exe -accepteula -i
+Set-Location "$env:TEMP\Sysmon"
+.\Sysmon64.exe -accepteula -i .\sysmon-config.xml
 ```
 
-Use the `sysmon-config.xml` in this folder for a more complete configuration.
+Verify Sysmon is running and config is loaded:
+```powershell
+.\Sysmon64.exe -c
+```
 
-## Step 7 — Ingest Sysmon Logs into Sentinel
+## Step 7 — Enable Audit Policies for Full Visibility
+RDP into the VM and run in PowerShell (as Administrator):
+
+```powershell
+# Enable Process Command Line logging (required for Event ID 4688 to include command line)
+auditpol /set /subcategory:"Process Creation" /success:enable
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit" /v ProcessCreationIncludeCmdLine_Enabled /t REG_DWORD /d 1 /f
+
+# Enable PowerShell Script Block Logging (required for Event ID 4104)
+$sbPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"
+If (-not (Test-Path $sbPath)) { New-Item -Path $sbPath -Force }
+Set-ItemProperty -Path $sbPath -Name EnableScriptBlockLogging -Value 1
+
+# Enable PowerShell Module Logging (Event ID 4103)
+$mlPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging"
+If (-not (Test-Path $mlPath)) { New-Item -Path $mlPath -Force }
+Set-ItemProperty -Path $mlPath -Name EnableModuleLogging -Value 1
+$mlModPath = "$mlPath\ModuleNames"
+If (-not (Test-Path $mlModPath)) { New-Item -Path $mlModPath -Force }
+Set-ItemProperty -Path $mlModPath -Name "*" -Value "*"
+```
+
+Verify the policies are applied:
+```powershell
+auditpol /get /subcategory:"Process Creation"
+Get-ItemProperty "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"
+```
+
+## Step 8 — Ingest Sysmon Logs into Sentinel
 1. Sentinel → Data Connectors → search "Sysmon"
 2. Or add a custom Windows Event log via AMA:
    - Channel: `Microsoft-Windows-Sysmon/Operational`
 
 ## Verification
-Run this KQL in Sentinel to confirm logs are flowing:
+Run these KQL queries in Sentinel to confirm all log sources are flowing:
 
 ```kql
+// Windows Security Events (should include EventID 4688 with CommandLine populated)
 SecurityEvent
 | where TimeGenerated > ago(15m)
 | summarize count() by Computer, EventID
 | order by count_ desc
+```
+
+```kql
+// Sysmon events (should show EventIDs 1, 3, 10, 11, 13)
+Event
+| where TimeGenerated > ago(15m)
+| where Source == "Microsoft-Windows-Sysmon"
+| summarize count() by Computer, EventID
+| order by EventID asc
+```
+
+```kql
+// PowerShell Script Block Logging (Event ID 4104 — confirms ScriptBlockLogging is active)
+Event
+| where TimeGenerated > ago(15m)
+| where Source == "Microsoft-Windows-PowerShell"
+| where EventID == 4104
+| summarize count() by Computer
 ```
