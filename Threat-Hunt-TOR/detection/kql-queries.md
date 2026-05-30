@@ -34,6 +34,8 @@ actively placed TOR-related files on their desktop.
 
 All events cluster around **May 26, 2026, 10:38 AM – 1:29 PM**.
 
+![DeviceFileEvents results](../assets/device-file-events.png)
+
 ---
 
 ## 2. DeviceProcessEvents — TOR Execution Confirmation
@@ -64,6 +66,8 @@ DeviceProcessEvents
 TOR Browser execution. The `portable` flag in the command line shows the user deliberately avoided
 standard install locations to reduce traces.
 
+![DeviceProcessEvents results](../assets/device-process-events.png)
+
 ---
 
 ## 3. DeviceNetworkEvents — TOR Network Connections
@@ -89,3 +93,5 @@ DeviceNetworkEvents
 | May 26, 11:27 AM | `ConnectionSuccess` | 127.0.0.1 | 9150 | `firefox.exe` | TOR Browser SOCKS proxy active |
 | May 26, 10:38 AM | `ConnectionFailed` | 127.0.0.1 | 9150 | `firefox.exe` | Initial proxy attempt (TOR not ready yet) |
 | May 26, 10:38 AM | `ConnectionSuccess` | 127.0.0.1 | 9151 | `firefox.exe` | TOR Browser control port established |
+
+![DeviceNetworkEvents results](../assets/device-network-events.png)
