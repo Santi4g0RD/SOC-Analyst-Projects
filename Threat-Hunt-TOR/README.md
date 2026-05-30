@@ -26,6 +26,10 @@ Follow each step below in order to see the full threat hunt from setup to final 
 | 2 | Run KQL queries in MDE Advanced Hunting to detect IoCs | [Detection Queries](detection/kql-queries.md) |
 | 3 | Review full analysis, timeline, and conclusions | [Findings Report](report/findings.md) |
 
+### Summary
+
+The user "labuser" on the "abel-win11-vm" device initiated and completed the installation of the TOR browser using a portable executable, deliberately bypassing standard installation paths to avoid leaving registry traces. They proceeded to launch the TOR browser, establish a full TOR circuit by connecting to an external relay node (`203.55.81.1` on port `9001`), and created various TOR-related files on their desktop, including a file named `tor-shopping-list.txt`. This file was subsequently deleted, indicating an attempt to conceal activity. This sequence of events confirms that the user actively installed, configured, and used the TOR browser — likely for anonymous browsing purposes — with the shopping list file suggesting possible intent to conduct transactions on the dark web.
+
 ## MITRE ATT&CK Coverage
 
 | Technique ID | Name | Tactic |
