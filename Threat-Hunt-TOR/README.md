@@ -1,4 +1,5 @@
 # Threat Hunt: TOR Browser Detection
+<img width="595" height="265" alt="image" src="https://github.com/user-attachments/assets/32118673-fa6c-4186-8da8-db29206ac002" />
 
 ## Overview
 This project detects unauthorized TOR browser installation and usage on a Windows 11 corporate
