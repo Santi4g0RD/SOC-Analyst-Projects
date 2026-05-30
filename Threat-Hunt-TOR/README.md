@@ -12,9 +12,9 @@ nodes. Anonymous reports also suggest employees are discussing ways to access re
 during work hours. The goal is to detect any TOR usage and notify management if confirmed.
 
 ### High-Level TOR-Related IoC Discovery Plan
-Check DeviceFileEvents for any tor(.exe) or firefox(.exe) file events.
-Check DeviceProcessEvents for any signs of installation or usage.
-Check DeviceNetworkEvents for any signs of outgoing connections over known TOR ports.
+- Check DeviceFileEvents for any tor(.exe) or firefox(.exe) file events.
+- Check DeviceProcessEvents for any signs of installation or usage.
+- Check DeviceNetworkEvents for any signs of outgoing connections over known TOR ports.
 
 ## Exercise Walkthrough
 
