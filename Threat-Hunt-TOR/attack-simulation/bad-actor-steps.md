@@ -16,7 +16,7 @@ workstation, generating the logs and IoCs used in the threat hunt.
 3. **Open TOR Browser** from the folder on the Desktop
 
 4. **Connect to TOR and browse .onion sites**
-   - Use a site like [https://onion.live/](https://onion.live/) to find active .onion links
+   - Browse a sample .onion site to generate outbound TOR network traffic
 
 5. **Create a suspicious file on the Desktop**
    - Create a file named `tor-shopping-list.txt`
