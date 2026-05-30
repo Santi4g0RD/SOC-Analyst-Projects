@@ -28,23 +28,13 @@ during work hours. The goal is to detect any TOR usage and notify management if 
 | Log Sources | DeviceFileEvents, DeviceProcessEvents, DeviceNetworkEvents |
 | TOR Version | Portable TOR Browser 15.0.14 |
 
-## Project Structure
+## Exercise Walkthrough
 
-```
-Threat-Hunt-TOR/
-├── README.md
-├── setup/
-│   └── environment-setup.md        # VM provisioning and MDE onboarding steps
-├── attack-simulation/
-│   └── bad-actor-steps.md          # Steps taken to simulate TOR usage and generate IoCs
-├── detection/
-│   └── kql-queries.md              # KQL hunting queries with findings
-└── report/
-    └── findings.md                 # Full analysis, conclusions, and timeline
-```
+Follow each step below in order to see the full threat hunt from setup to final report:
 
-## How to Reproduce
-1. Follow `setup/environment-setup.md` to provision the VM and onboard it to MDE
-2. Simulate TOR activity using the steps in `attack-simulation/bad-actor-steps.md`
-3. Run the KQL queries from `detection/kql-queries.md` in the MDE Advanced Hunting console
-4. Review the full analysis in `report/findings.md`
+| Step | Description | Link |
+|---|---|---|
+| 1 | Provision the VM and onboard to MDE | [Environment Setup](setup/environment-setup.md) |
+| 2 | Simulate TOR installation and usage as the bad actor | [Attack Simulation](attack-simulation/bad-actor-steps.md) |
+| 3 | Run KQL queries in MDE Advanced Hunting to detect IoCs | [Detection Queries](detection/kql-queries.md) |
+| 4 | Review full analysis, timeline, and conclusions | [Findings Report](report/findings.md) |
