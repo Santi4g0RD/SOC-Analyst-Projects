@@ -11,6 +11,21 @@ Recent network logs show unusual encrypted traffic patterns and connections to k
 nodes. Anonymous reports also suggest employees are discussing ways to access restricted sites
 during work hours. The goal is to detect any TOR usage and notify management if confirmed.
 
+### High-Level TOR-Related IoC Discovery Plan
+Check DeviceFileEvents for any tor(.exe) or firefox(.exe) file events.
+Check DeviceProcessEvents for any signs of installation or usage.
+Check DeviceNetworkEvents for any signs of outgoing connections over known TOR ports.
+
+## Exercise Walkthrough
+
+Follow each step below in order to see the full threat hunt from setup to final report:
+
+| Step | Description | Link |
+|---|---|---|
+| 1 | Simulate TOR installation and usage as the bad actor | [Attack Simulation](attack-simulation/bad-actor-steps.md) |
+| 2 | Run KQL queries in MDE Advanced Hunting to detect IoCs | [Detection Queries](detection/kql-queries.md) |
+| 3 | Review full analysis, timeline, and conclusions | [Findings Report](report/findings.md) |
+
 ## MITRE ATT&CK Coverage
 
 | Technique ID | Name | Tactic |
@@ -27,13 +42,3 @@ during work hours. The goal is to detect any TOR usage and notify management if 
 | EDR | Microsoft Defender for Endpoint (MDE) |
 | Log Sources | DeviceFileEvents, DeviceProcessEvents, DeviceNetworkEvents |
 | TOR Version | Portable TOR Browser 15.0.14 |
-
-## Exercise Walkthrough
-
-Follow each step below in order to see the full threat hunt from setup to final report:
-
-| Step | Description | Link |
-|---|---|---|
-| 1 | Simulate TOR installation and usage as the bad actor | [Attack Simulation](attack-simulation/bad-actor-steps.md) |
-| 2 | Run KQL queries in MDE Advanced Hunting to detect IoCs | [Detection Queries](detection/kql-queries.md) |
-| 3 | Review full analysis, timeline, and conclusions | [Findings Report](report/findings.md) |
