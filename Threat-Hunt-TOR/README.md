@@ -34,7 +34,6 @@ Follow each step below in order to see the full threat hunt from setup to final 
 
 | Step | Description | Link |
 |---|---|---|
-| 1 | Provision the VM and onboard to MDE | [Environment Setup](setup/environment-setup.md) |
-| 2 | Simulate TOR installation and usage as the bad actor | [Attack Simulation](attack-simulation/bad-actor-steps.md) |
-| 3 | Run KQL queries in MDE Advanced Hunting to detect IoCs | [Detection Queries](detection/kql-queries.md) |
-| 4 | Review full analysis, timeline, and conclusions | [Findings Report](report/findings.md) |
+| 1 | Simulate TOR installation and usage as the bad actor | [Attack Simulation](attack-simulation/bad-actor-steps.md) |
+| 2 | Run KQL queries in MDE Advanced Hunting to detect IoCs | [Detection Queries](detection/kql-queries.md) |
+| 3 | Review full analysis, timeline, and conclusions | [Findings Report](report/findings.md) |
