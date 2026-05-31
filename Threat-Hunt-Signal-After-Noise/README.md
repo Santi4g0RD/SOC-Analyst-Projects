@@ -36,6 +36,9 @@ A post-intrusion threat hunt conducted inside a corporate Azure estate. The init
 | P05 | Outbound Whispers — Where Traffic Went | [Hunt Notes](hunt-notes.md#p05--outbound-whispers-where-traffic-went) |
 | P06 | Doors Held Open — Defence Evasion | [Hunt Notes](hunt-notes.md#p06--doors-held-open-defence-evasion) |
 | P07 | Hands on the Vault — Final Actions | [Hunt Notes](hunt-notes.md#p07--hands-on-the-vault-final-actions) |
+| Q01 | The Brute Force Assumption — Credential Reuse (T1078) | [Hunt Notes](hunt-notes.md#q01--the-brute-force-assumption) |
+| Q02 | Lateral Movement Summary — RDP Pivot (T1021) | [Hunt Notes](hunt-notes.md#q02--lateral-movement-summary) |
+| Q03 | Onward Movement Check — No Further Pivoting | [Hunt Notes](hunt-notes.md#q03--onward-movement-check) |
 
 ---
 
