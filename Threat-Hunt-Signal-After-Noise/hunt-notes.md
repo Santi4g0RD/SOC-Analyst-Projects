@@ -202,3 +202,63 @@ DeviceProcessEvents
 ![P07 — M365 Auth](assets/p07-m365-auth.png)
 ![P07 — Scheduled Task](assets/p07-scheduled-task.png)
 ![P07 — Hands on Keyboard](assets/p07-hands-on-keyboard.png)
+
+---
+
+## Q01 — The Brute Force Assumption
+
+**Finding:** Failed logons showed `UnauthorizedLogonType` — not wrong passwords. Credentials were valid from the start. Operator authenticated as `vmadminusername` FROM sarah-chen's machine. No brute force indicators (no username variation, no multiple source IPs on failures).
+
+**Key Query:**
+```kql
+DeviceLogonEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T09:28:00Z))
+| where DeviceName == "azwks-phtg-02"
+| where ActionType == "LogonFailed"
+| project TimeGenerated, AccountName, LogonType, RemoteIP, FailureReason
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1078 — Valid Accounts  
+**Answer:** `credential reuse`
+
+![Q01 — Brute Force Assumption](assets/q01-brute-force-assumption.png)
+
+---
+
+## Q02 — Lateral Movement Summary
+
+**Finding:** At 09:48 operator used `mstsc.exe` with a pre-staged RDP file to move from `azwks-phtg-02` to `azwks-phtg-01`. Source IP is the internal IP of phtg-02.
+
+**Key Query:**
+```kql
+DeviceLogonEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where RemoteIP == "10.0.0.152"
+| project TimeGenerated, DeviceName, AccountName, LogonType, RemoteIP, RemoteDeviceName
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1021 — Remote Services (RDP)  
+**Answer:** `vmadminusername, 10.0.0.152, azwks-phtg-01`
+
+![Q02 — Lateral Movement](assets/q02-lateral-movement.png)
+
+---
+
+## Q03 — Onward Movement Check
+
+**Finding:** Operator did not pivot further from `azwks-phtg-01` (10.0.0.105) to any other host. Lateral movement stopped at the second hop.
+
+**Key Query:**
+```kql
+DeviceLogonEvents
+| where TimeGenerated between (datetime(2025-12-13T09:48:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where RemoteIP == "10.0.0.105"
+| project TimeGenerated, DeviceName, AccountName, LogonType, RemoteIP, RemoteDeviceName
+| order by TimeGenerated asc
+```
+
+**Answer:** `None` — no further lateral movement detected.
+
+![Q03 — Onward Movement](assets/q03-onward-movement.png)
