@@ -54,6 +54,16 @@ A post-intrusion threat hunt conducted inside a corporate Azure estate. The init
 | Q16 | Encoded Beacon Endpoints — Base64 Decoded C2 URIs (T1027, T1071) | [Hunt Notes](hunt-notes.md#q16--encoded-beacon-endpoints) |
 | Q17 | Dual-Channel C2 Rationale — Resiliency + Function Split (T1090) | [Hunt Notes](hunt-notes.md#q17--two-beacons-why) |
 | Q18 | Deployment Pattern — Download then Execute (T1105) | [Hunt Notes](hunt-notes.md#q18--deployment-pattern-recognition) |
+| Q19 | Operator Outbound Domains — health-cloud.cc Subdomains (T1071.001) | [Hunt Notes](hunt-notes.md#q19--operator-outbound-domains) |
+| Q20 | AMSI Probe Identification — Pre-Payload Defense Check (T1562.001) | [Hunt Notes](hunt-notes.md#q20--amsi-probe-identification) |
+| Q21 | Lineage Break Pattern — cmd.exe Intermediary (T1059.003) | [Hunt Notes](hunt-notes.md#q21--lineage-break-pattern) |
+| Q22 | Defender Tampering — Path + Process Exclusions (T1562.001) | [Hunt Notes](hunt-notes.md#q22--defender-tampering) |
+| Q23 | Defender Detection Outcome — Detected but Not Blocked (T1562.001) | [Hunt Notes](hunt-notes.md#q23--defender-detection-outcome) |
+| Q24 | Temporary Defender Exclusion — Add-then-Remove Pattern (T1562.001) | [Hunt Notes](hunt-notes.md#q24--temporary-defender-exclusion) |
+| Q26 | Custom Event Log Source Purpose — Blend into Application Log (T1112) | [Hunt Notes](hunt-notes.md#q26--custom-event-log-source-purpose) |
+| Q27 | LSASS Access Anomaly — powershell.exe under vmadminusername (T1003.001) | [Hunt Notes](hunt-notes.md#q27--lsass-access-anomaly) |
+| Q28 | Access Right Escalation — PROCESS_ALL_ACCESS (T1003.001) | [Hunt Notes](hunt-notes.md#q28--access-right-escalation) |
+| Q29 | Credential Dump Confirmation — ReadProcessMemoryApiCall (T1003.001) | [Hunt Notes](hunt-notes.md#q29--credential-dump-confirmation) |
 
 ---
 
@@ -79,6 +89,6 @@ A post-intrusion threat hunt conducted inside a corporate Azure estate. The init
 
 ## Summary
 
-The operator entered via `sarah-chen`'s machine (`173.244.55.131`) authenticating as `vmadminusername` to `azwks-phtg-02` at 09:27 UTC. Within 21 minutes they pivoted to `azwks-phtg-01` using a pre-staged RDP file — indicating prior reconnaissance. Persistence was established via a Startup LNK executing a hidden PowerShell script. Two Base64-encoded C2 beacons checked in to `health-cloud.cc` subdomains fronted by Cloudflare. Defender was blinded by writing its own exclusions via `msmpeng.exe`. Final actions included automated M365 authentication attempts and confirmed hands-on-keyboard access at 15:55 UTC.
+The operator entered via `sarah-chen`'s machine (`173.244.55.131`) authenticating as `vmadminusername` to `azwks-phtg-02` at 09:27 UTC. Within 21 minutes they pivoted to `azwks-phtg-01` using a pre-staged RDP file — indicating prior reconnaissance. Persistence was established via a Startup LNK and a Run key entry, both executing hidden PowerShell scripts. Two Base64-encoded C2 beacons checked in to `health-cloud.cc` subdomains fronted by Cloudflare, running in parallel with a masquerade binary (`PHGTHealthCloudSvc.exe` → `bitsadmin.exe`) healthcheck loop for dual-channel resilience. Defender was blinded via `Add-MpPreference` exclusions — including a temporary add-then-remove pattern to avoid leaving a permanent footprint. The operator also registered a custom Application event log source to blend tooling output into trusted log streams. Final actions confirmed hands-on-keyboard access and credential dumping via `ReadProcessMemoryApiCall` against LSASS under `PROCESS_ALL_ACCESS`.
 
-**Key skills demonstrated:** KQL threat hunting across 5 MDE tables, C2 infrastructure analysis, persistence mechanism identification, defence evasion detection, MITRE ATT&CK mapping.
+**Key skills demonstrated:** KQL threat hunting across 5 MDE tables, C2 infrastructure analysis, persistence mechanism identification, defence evasion detection, LOLBin masquerade identification, LSASS credential dump confirmation, MITRE ATT&CK mapping.
