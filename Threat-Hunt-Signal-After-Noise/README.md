@@ -39,6 +39,21 @@ A post-intrusion threat hunt conducted inside a corporate Azure estate. The init
 | Q01 | The Brute Force Assumption — Credential Reuse (T1078) | [Hunt Notes](hunt-notes.md#q01--the-brute-force-assumption) |
 | Q02 | Lateral Movement Summary — RDP Pivot (T1021) | [Hunt Notes](hunt-notes.md#q02--lateral-movement-summary) |
 | Q03 | Onward Movement Check — No Further Pivoting | [Hunt Notes](hunt-notes.md#q03--onward-movement-check) |
+| Q04 | First Operator Script — PowerShell from User Profile (T1059.001) | [Hunt Notes](hunt-notes.md#q04--first-operator-script) |
+| Q05 | Operator Concealment Flags — Hidden Window + Bypass (T1564.003) | [Hunt Notes](hunt-notes.md#q05--operator-concealment-flags) |
+| Q06 | Staging Directory — ProgramData Masquerade (T1036) | [Hunt Notes](hunt-notes.md#q06--staging-directory) |
+| Q07 | Concealment Pattern — attrib.exe Hiding (T1564) | [Hunt Notes](hunt-notes.md#q07--concealment-pattern) |
+| Q08 | LOLBin Masquerade — PHtGHealthCloudSvc.exe → bitsadmin.exe (T1036.003) | [Hunt Notes](hunt-notes.md#q08--lolbin-masquerade-identification) |
+| Q09 | Registry Activity Volume — 280 Events Post-Lateral | [Hunt Notes](hunt-notes.md#q09--registry-activity-volume) |
+| Q10 | Persistence Signal Isolation — Run Key (T1547.001) | [Hunt Notes](hunt-notes.md#q10--persistence-signal-isolation) |
+| Q11 | Run Key Value Name — PHTGHealthCloudTray (T1547.001) | [Hunt Notes](hunt-notes.md#q11--run-key-value-name) |
+| Q12 | Run Key Persistence Command — Hidden PS1 at Logon (T1547.001) | [Hunt Notes](hunt-notes.md#q12--run-key-persistence-command) |
+| Q13 | Second Persistence — Startup LNK (T1547.001) | [Hunt Notes](hunt-notes.md#q13--second-persistence-mechanism) |
+| Q14 | Third Persistence — HKLM EventLog Registration (T1112) | [Hunt Notes](hunt-notes.md#q14--third-persistence-mechanism) |
+| Q15 | Healthcheck Beacon Loop — 22 Executions (T1071.001) | [Hunt Notes](hunt-notes.md#q15--tooling-healthcheck-loop) |
+| Q16 | Encoded Beacon Endpoints — Base64 Decoded C2 URIs (T1027, T1071) | [Hunt Notes](hunt-notes.md#q16--encoded-beacon-endpoints) |
+| Q17 | Dual-Channel C2 Rationale — Resiliency + Function Split (T1090) | [Hunt Notes](hunt-notes.md#q17--two-beacons-why) |
+| Q18 | Deployment Pattern — Download then Execute (T1105) | [Hunt Notes](hunt-notes.md#q18--deployment-pattern-recognition) |
 
 ---
 

