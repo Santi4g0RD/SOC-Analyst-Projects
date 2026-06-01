@@ -634,3 +634,245 @@ DeviceProcessEvents
 **Answer:** Download then execute — a pre-staged PowerShell script calls out to `updates.health-cloud.cc` to fetch `PHtGHealthCloudSvc.exe` (T1105 ingress tool transfer), then immediately launches it; the outbound HTTPS connection is the link between the two steps.
 
 ![Q18 — Deployment Pattern](assets/q18-deployment-pattern.png)
+
+---
+
+## Q19 — Operator Outbound Domains
+
+**Hunt Lead:** "What domains did the operator's PowerShell reach during post-access activity? List both in chronological order."
+
+**Finding:** Filtering `DeviceNetworkEvents` to `powershell.exe` initiator and `ConnectionSuccess` cuts through the OneDrive/Edge baseline. Both operator domains share the `health-cloud.cc` TLD.
+
+**Key Query:**
+```kql
+DeviceNetworkEvents
+| where TimeGenerated between (datetime(2025-12-13T09:48:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where ActionType == "ConnectionSuccess"
+| where InitiatingProcessFileName == "powershell.exe"
+| project TimeGenerated, RemoteUrl, RemoteIP, RemotePort
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1071.001 — Application Layer Protocol: Web Protocols  
+**Answer:** `updates.health-cloud.cc`, `status.health-cloud.cc`
+
+![Q19 — Outbound Domains](assets/q19-outbound-domains.png)
+
+---
+
+## Q20 — AMSI Probe Identification
+
+**Hunt Lead:** "After outbound succeeded, the operator ran a plain (non-encoded) PowerShell script from their staging Bin directory. Name the script and explain what it's doing."
+
+**Finding:** Filtering out `-EncodedCommand` leaves one script in the Bin directory. The filename directly signals its purpose — operators probe AMSI before running their main payload to confirm the environment won't detonate an alert.
+
+**Key Query:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T10:12:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where FileName == "powershell.exe"
+| where ProcessCommandLine !contains "-EncodedCommand"
+| where ProcessCommandLine contains "Bin"
+| project TimeGenerated, ProcessCommandLine, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1562.001 — Impair Defenses: Disable or Modify Tools  
+**Answer:** `AMSI_probe.ps1` — probes AMSI defenses to check if the environment is safe for payload execution.
+
+![Q20 — AMSI Probe](assets/q20-amsi-probe.png)
+
+---
+
+## Q21 — Lineage Break Pattern
+
+**Hunt Lead:** "On azwks-phtg-01, during the initial operator session after the anchor logon, cmd.exe was used twice as an intermediary to launch follow-on payloads. Identify both invocations and explain why an operator chains payloads through cmd.exe instead of running them directly."
+
+**Finding:** Two `cmd.exe` invocations appear within the first hour after the anchor logon (09:48:40). Chaining through `cmd.exe` breaks the parent-process lineage so the true initiating process is obscured in telemetry.
+
+**Key Query:**
+```kql
+DeviceProcessEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T10:48:40Z))
+| where FileName == "cmd.exe"
+| where InitiatingProcessAccountName == "vmadminusername"
+    or AccountName == "vmadminusername"
+| where ProcessCommandLine !contains "whoami"
+| project TimeGenerated, ProcessCommandLine, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1059.003 — Command and Scripting Interpreter: Windows Command Shell  
+**Answer:** `cmd.exe` launched `hc_lineage.ps1` and `phtg_health_diag_update_FLAG-22.bat`, chaining through `cmd.exe` to obscure the true parent process lineage.
+
+![Q21 — Lineage Break](assets/q21-lineage-break.png)
+
+---
+
+## Q22 — Defender Tampering
+
+**Hunt Lead:** "The operator made Defender quieter after persistence landed. What did they exclude? List both objects — one's a path, one's a process."
+
+**Finding:** `Add-MpPreference` was invoked twice via `PowerShellCommand` events. One exclusion targets the Cache staging directory; the other targets the masquerade binary directly — blinding Defender to both the files and the running process.
+
+**Key Query:**
+```kql
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T18:00:00Z))
+| where ActionType == "PowerShellCommand"
+| where AdditionalFields contains "Add-MpPreference"
+| project TimeGenerated, AdditionalFields
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1562.001 — Impair Defenses: Disable or Modify Tools  
+**Answer:** `ExclusionPath C:\ProgramData\PHTG\HealthCloud\Cache` and `ExclusionProcess C:\ProgramData\PHTG\HealthCloud\PHTGHealthCloudSvc.exe`
+
+![Q22 — Defender Tampering](assets/q22-defender-tampering.png)
+
+---
+
+## Q23 — Defender Detection Outcome
+
+**Hunt Lead:** "Defender generated two AntivirusReport events on the PHTG HealthCloud.lnk artefact. Did it block the persistence? What does WasExecutingWhileDetected tell you about defensive posture?"
+
+**Finding:** Two `AntivirusReport` events fired against `PHTG HealthCloud.lnk`. `WasExecutingWhileDetected: false` means Defender caught the artefact after it was already placed — it detected but did not block.
+
+**Key Query:**
+```kql
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T18:00:00Z))
+| where ActionType == "AntivirusReport"
+| where FileName == "PHTG HealthCloud.lnk"
+| project TimeGenerated, AdditionalFields
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1562.001  
+**Answer:** Defender detected `PHTG HealthCloud.lnk` and generated two AntivirusReport events but did not block it — `WasExecutingWhileDetected: false` confirms the persistence was already in place when caught.
+
+![Q23 — Defender Outcome](assets/q23-defender-outcome.png)
+
+---
+
+## Q24 — Temporary Defender Exclusion
+
+**Hunt Lead:** "Inside _.ps1 itself the operator did something neat with Defender — applied an exclusion then removed it within seconds. Identify the path briefly excluded, prove the add-then-remove pattern, and explain why an operator does this."
+
+**Finding:** Within the same minute as `_.ps1` execution, `Add-MpPreference` and `Remove-MpPreference` fired in close sequence against the user-profile PHTG path (not the HealthCloud workspace). The add-then-remove window is too short to attract sustained attention but long enough for the payload to drop without triggering a detection.
+
+**Key Queries:**
+```kql
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T10:11:00Z) .. datetime(2025-12-13T10:12:30Z))
+| where ActionType == "PowerShellCommand"
+| where AdditionalFields contains "MpPreference"
+| project TimeGenerated, AdditionalFields
+| order by TimeGenerated asc
+```
+```kql
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T10:11:00Z) .. datetime(2025-12-13T10:15:00Z))
+| where ActionType == "PowerShellCommand"
+| where AdditionalFields contains "Remove"
+| project TimeGenerated, AdditionalFields
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1562.001 — Impair Defenses  
+**Answer:** `C:\Users\vmAdminUsername\Documents\PHTG\` was briefly excluded via `Add-MpPreference` then immediately removed with `Remove-MpPreference`, allowing the payload to drop without Defender interference while avoiding a permanent exclusion that would attract attention.
+
+![Q24 — Temp Exclusion Add](assets/q24-temp-exclusion-add.png)
+![Q24 — Temp Exclusion Remove](assets/q24-temp-exclusion-remove.png)
+
+---
+
+## Q26 — Custom Event Log Source Purpose
+
+**Hunt Lead:** "Q14 found the operator registered a custom Application event log source. What does registering this enable for the operator's tooling, and why does the operator want that?"
+
+**Finding:** Registering an event source under `HKLM\...\EventLog\Application` allows any process to write to the Windows Application log under a custom source name. The Application log is treated as trusted telemetry by most defenders — operator activity sitting inside it draws far less scrutiny than events written to a custom or unknown log.
+
+**MITRE:** T1112 — Modify Registry  
+**Answer:** Registering a custom event log source enables writing to the Windows Application log, allowing the operator's tooling to blend in with legitimate application telemetry and avoid scrutiny.
+
+---
+
+## Q27 — LSASS Access Anomaly
+
+**Hunt Lead:** "139 OpenProcessApiCall events target lsass.exe in the window. Most are baseline (MsMpEng, WmiPrvSE, SenseIR, system context). One isn't. Name the initiating process AND the account context that isn't system."
+
+**Finding:** Filtering `InitiatingProcessAccountName` to exclude system, network service, and local service leaves one row — `powershell.exe` running under the operator's account. All 139 other events are expected baseline handles from security and management processes.
+
+**Key Query:**
+```kql
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T18:00:00Z))
+| where ActionType == "OpenProcessApiCall"
+| where FileName == "lsass.exe"
+| where InitiatingProcessAccountName != "system"
+| where InitiatingProcessAccountName != "network service"
+| where InitiatingProcessAccountName != "local service"
+| project TimeGenerated, InitiatingProcessFileName, InitiatingProcessAccountName, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1003.001 — OS Credential Dumping: LSASS Memory  
+**Answer:** `vmadminusername`, `powershell.exe`
+
+![Q27 — LSASS Access](assets/q27-lsass-access.png)
+
+---
+
+## Q28 — Access Right Escalation
+
+**Hunt Lead:** "The anomalous LSASS access fired with two DesiredAccess values, one second apart. Decode both. Which one grants full access to the process, and why is the escalation between them significant?"
+
+**Finding:** Two `OpenProcessApiCall` events against `lsass.exe` under `vmadminusername` appear one second apart. The first is a query handle; the second (`0x1FFFFF` = `2047999`) is `PROCESS_ALL_ACCESS` — granting every possible permission including memory read/write. The escalation from query to full access confirms the operator was not just enumerating but was preparing to read LSASS memory.
+
+**Key Query:**
+```kql
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T18:00:00Z))
+| where ActionType == "OpenProcessApiCall"
+| where FileName == "lsass.exe"
+| where InitiatingProcessAccountName == "vmadminusername"
+| project TimeGenerated, AdditionalFields
+| order by TimeGenerated asc
+```
+
+**MITRE:** T1003.001  
+**Answer:** `2047999` (`0x1FFFFF` — `PROCESS_ALL_ACCESS`) grants full access; the escalation from query handle to full access is the signal that credential dumping was the intent, not just process inspection.
+
+![Q28 — Access Rights](assets/q28-access-rights.png)
+
+---
+
+## Q29 — Credential Dump Confirmation
+
+**Hunt Lead:** "Opening a full-access handle to LSASS isn't dumping yet. What's the next ActionType you'd expect if the operator actually read LSASS memory? Confirm it fired on phtg-01."
+
+**Finding:** After the `OpenProcessApiCall` events, `ReadProcessMemoryApiCall` appears in `DeviceEvents` — confirming the operator didn't just open a handle but followed through and read LSASS memory. The credential dump is confirmed.
+
+**Key Query:**
+```kql
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T18:00:00Z))
+| where FileName == "lsass.exe"
+| summarize count() by ActionType
+```
+
+**MITRE:** T1003.001 — OS Credential Dumping: LSASS Memory  
+**Answer:** `ReadProcessMemoryApiCall`
+
+![Q29 — Memory Read](assets/q29-memory-read.png)
