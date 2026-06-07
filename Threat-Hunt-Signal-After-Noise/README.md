@@ -92,7 +92,7 @@ DeviceLogonEvents
 
 ### Tooling Deployment — Download-Then-Execute
 
-A pre-staged `_.ps1` script made an outbound HTTPS call to `updates.health-cloud.cc`. **One second later**, `PHtGHealthCloudSvc.exe` launched — classic download-then-execute. All tooling staged under `C:\ProgramData\PHTG\HealthCloud\`. The implant spoofed `bitsadmin.exe` via VersionInfo tampering, separated from legitimate FileName/OriginalFileName mismatches by its staging path. All PowerShell execution used `-WindowStyle Hidden -ExecutionPolicy Bypass`.
+A pre-staged `_.ps1` script made an outbound HTTPS call to `updates.health-cloud.cc`. **One second later**, `PHtGHealthCloudSvc.exe` launched — classic download-then-execute. All tooling staged under `C:\ProgramData\PHTG\HealthCloud\`. The implant spoofed `bitsadmin.exe` via VersionInfo tampering — `FileName` is `PHtGHealthCloudSvc.exe` but `ProcessVersionInfoOriginalFileName` reports `bitsadmin.exe`. Its staging path under `C:\ProgramData\PHTG\HealthCloud\` distinguishes it from any legitimate binary with a mismatched VersionInfo field. All PowerShell execution used `-WindowStyle Hidden -ExecutionPolicy Bypass`.
 
 ```kql
 // Find the first operator script and expose the concealment flags
@@ -209,7 +209,7 @@ DeviceEvents
 
 ![Q24 — Temp Exclusion Add](assets/q24-temp-exclusion-add.png)
 
-**MITRE:** T1562.001 — Impair Defenses: Disable or Modify Tools, T1564 — Hide Artifacts, T1059.003 — cmd.exe Lineage Break
+**MITRE:** T1562.001 — Impair Defenses: Disable or Modify Tools, T1564 — Hide Artifacts, T1059.003 — Windows Command Shell
 
 ---
 
@@ -385,7 +385,7 @@ DeviceEvents
 
 ### Final Actions — M365 Targeting + Confirmed Live Access
 
-`phtg_activity.ps1` drove Edge to `login.microsoftonline.com` repeatedly. Persistence confirmed firing at **13:40 UTC** via scheduled task without an active RDP session. At **15:55 UTC**, `notepad.exe`, `calc.exe`, and `mspaint.exe` launched interactively — live desktop access confirmed, nearly 6.5 hours after initial entry.
+`phtg_activity.ps1` drove Edge to `login.microsoftonline.com` repeatedly. Persistence confirmed firing at **13:40 UTC** without an active RDP session — the Startup LNK and Run key mechanisms triggering autonomously. At **15:55 UTC**, `notepad.exe`, `calc.exe`, and `mspaint.exe` launched interactively — live desktop access confirmed, nearly 6.5 hours after initial entry.
 
 ```kql
 // Trace final operator actions on the pivot host
