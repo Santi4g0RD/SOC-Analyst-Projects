@@ -296,6 +296,18 @@ DeviceProcessEvents
 
 **Finding:** The operator ran all scripts with flags designed to hide execution from the user and bypass security controls.
 
+**Key Query:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-12-13T09:48:00Z) .. datetime(2025-12-13T18:00:00Z))
+| where DeviceName == "azwks-phtg-01"
+| where AccountName == "vmadminusername"
+| where FileName == "powershell.exe"
+| where ProcessCommandLine contains "WindowStyle" or ProcessCommandLine contains "ExecutionPolicy"
+| project TimeGenerated, ProcessCommandLine
+| order by TimeGenerated asc
+```
+
 **Answer:**
 ```powershell
 -WindowStyle Hidden

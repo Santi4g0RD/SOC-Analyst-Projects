@@ -394,6 +394,17 @@ DeviceFileEvents
 
 **Finding:** The service unit file was written using `cat` (stdout redirect) rather than `vim`, `nano`, or any interactive editor. This leaves no `~`-suffix swap file artifacts and generates minimal process telemetry.
 
+**Key Query:**
+```kql
+DeviceFileEvents
+| where TimeGenerated between (datetime(2026-02-04) .. datetime(2026-02-14))
+| where DeviceName has "rocky83"
+| where FolderPath has "/etc/systemd/system"
+| where ActionType in ("FileCreated", "FileModified")
+| project TimeGenerated, ActionType, FileName, FolderPath, InitiatingProcessFileName, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
 **Answer:** `cat`
 
 ![Q18 — Cat Creation](assets/q18-cat-creation.png)
@@ -490,6 +501,27 @@ DeviceProcessEvents
 ## Q23 — First Exfiltration Attempt
 
 **Finding:** The operator attempted `scp` to push the archive directly to the C2 host as user `streetrack`. Network controls blocked the connection, leaving a failed network event in the telemetry.
+
+**Key Query — scp command:**
+```kql
+DeviceProcessEvents
+| where TimeGenerated between (datetime(2026-02-11T04:00:00) .. datetime(2026-02-11T06:00:00))
+| where DeviceName has "rocky83"
+| where FileName == "scp"
+| where AccountName == "it.admin"
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
+**Key Query — failed network event:**
+```kql
+DeviceNetworkEvents
+| where TimeGenerated between (datetime(2026-02-11T04:00:00) .. datetime(2026-02-11T06:00:00))
+| where DeviceName has "rocky83"
+| where InitiatingProcessFileName == "scp"
+| project TimeGenerated, ActionType, RemoteIP, RemotePort, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
 
 **Answer:**
 ```bash
