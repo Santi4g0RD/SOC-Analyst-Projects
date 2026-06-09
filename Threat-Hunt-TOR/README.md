@@ -1,45 +1,124 @@
 # Threat Hunt: TOR Browser Detection
+
 <img width="595" height="265" alt="image" src="https://github.com/user-attachments/assets/32118673-fa6c-4186-8da8-db29206ac002" />
 
 ## Overview
-This project detects unauthorized TOR browser installation and usage on a Windows 11 corporate
-workstation (`abel-win11-vm`) using Microsoft Defender for Endpoint (MDE) and KQL queries.
+
+A targeted threat hunt on a corporate Windows 11 workstation in response to management intelligence about anomalous encrypted outbound traffic and possible policy violations. The investigation confirmed unauthorized TOR browser installation, active circuit establishment to an external relay, and deliberate concealment of browsing artifacts.
+
+**Environment:** Microsoft Defender for Endpoint (MDE)  
+**Date of Activity:** May 26, 2026  
+**Platform:** Azure — Windows 11 (`abel-win11-vm`)  
+**Analyst:** Abel
+
+---
 
 ## Environment
 
 | Component | Details |
 |---|---|
-| Victim VM | Windows 11 (`Microsoft Azure`) |
 | EDR | Microsoft Defender for Endpoint (MDE) |
-| KQL | Kusto Query Language |
 | Log Sources | DeviceFileEvents, DeviceProcessEvents, DeviceNetworkEvents |
+| Endpoint | `abel-win11-vm` (Windows 11, Azure) |
+| Subject Account | `lababel` |
 | TOR Version | Portable TOR Browser 15.0.14 |
 
-## Scenario Summary
-Management suspects employees may be using TOR browsers to bypass network security controls.
-Recent network logs show unusual encrypted traffic patterns and connections to known TOR entry
-nodes. Anonymous reports also suggest employees are discussing ways to access restricted sites
-during work hours. The goal is to detect any TOR usage and notify management if confirmed.
+---
 
-### High-Level TOR-Related IoC Discovery Plan
-- Check DeviceFileEvents for any `tor.exe` or `firefox.exe` file events.
-- Check DeviceProcessEvents for any signs of installation or usage.
-- Check DeviceNetworkEvents for any signs of outgoing connections over known TOR ports.
+## Hunt Hypothesis
 
-## Exercise Walkthrough
+Management flagged anomalous encrypted outbound traffic and received anonymous reports of employees bypassing network controls. This hunt investigated whether any corporate endpoint had TOR browser installed or in active use.
 
-Follow each step below in order to see the full threat hunt from setup to final report:
+**IoC scope:**
+- `DeviceFileEvents` — TOR executable and configuration artifacts
+- `DeviceProcessEvents` — installation and execution evidence
+- `DeviceNetworkEvents` — outbound connections to known TOR relay ports
 
-| Step | Description | Link |
-|---|---|---|
-| 1 | Provision the VM and onboard to MDE | [Environment Setup](setup/environment-setup.md) |
-| 2 | Simulate TOR installation and usage as the bad actor | [Attack Simulation](attack-simulation/bad-actor-steps.md) |
-| 3 | Run KQL queries in MDE Advanced Hunting to detect IoCs | [Detection Queries](detection/kql-queries.md) |
-| 4 | Review full analysis, timeline, and conclusions | [Findings Report](report/findings.md) |
+---
 
-## Summary
+## Findings
 
-The user "lababel" on the "abel-win11-vm" device initiated and completed the installation of the TOR browser using a portable executable, deliberately bypassing standard installation paths to avoid leaving registry traces. They proceeded to launch the TOR browser, establish a full TOR circuit by connecting to an external relay node (`203.55.81.1` on port `9001`), and created various TOR-related files on their desktop, including a file named `tor-shopping-list.txt`. This file was subsequently deleted, indicating an attempt to conceal activity. This sequence of events confirms that the user actively installed, configured, and used the TOR browser — likely for anonymous browsing purposes — with the shopping list file suggesting possible intent to conduct transactions on the dark web.
+### Installation — Portable Executable, Registry Evasion
+
+At **10:38 AM on 2026-05-26**, the portable TOR Browser 15.0.14 installer was executed on `abel-win11-vm`. The user ran the portable variant from `C:\Users\lababel\Desktop\` rather than a standard installation path, deliberately bypassing the installer flow that would leave registry traces. File events captured multiple TOR components landing on the Desktop within the same minute: `Tor Browser.lnk`, `Tor Launcher.txt`, `Torbutton.txt`, `torbat`, and `icebuttom.bat`.
+
+```kql
+let TargetHostname = "abel-win11-vm";
+DeviceFileEvents
+| where DeviceName == TargetHostname
+| where FileName has_any ("tor")
+| project Timestamp, DeviceName, ActionType, FileName, FolderPath, SHA256, InitiatingProcessCommandLine
+| order by Timestamp desc
+```
+
+![DeviceFileEvents](assets/device-file-events.png)
+
+**MITRE:** T1204 — User Execution, T1036 — Masquerading
+
+---
+
+### Execution and Circuit Establishment
+
+At **10:38 AM**, `firefox.exe` (TOR Browser's browser engine) launched from `C:\Users\lababel\Desktop\`. The `portable` flag in the command line confirms the intent to avoid standard install-log traces. The TOR control port (`127.0.0.1:9151`) established immediately; the SOCKS proxy (`127.0.0.1:9150`) came online by **11:27 AM**. At **11:35 AM**, `tor.exe` completed a `ConnectionSuccess` to external relay `203.55.81.1` on port `9001` — a full TOR circuit confirmed.
+
+```kql
+let TargetHostname = "abel-win11-vm";
+DeviceProcessEvents
+| where DeviceName == TargetHostname
+| where InitiatingProcessCommandLine has_any ("firefox.exe", "tor-browser.exe", "tor.exe")
+| project Timestamp, DeviceName, ActionType, FileName, FolderPath, SHA256, InitiatingProcessCommandLine
+| order by Timestamp desc
+```
+
+![DeviceProcessEvents](assets/device-process-events.png)
+
+```kql
+let TargetHostname = "abel-win11-vm";
+let TorPorts = dynamic([9001, 9030, 9040, 9050, 9051, 9150, 9151]);
+DeviceNetworkEvents
+| where DeviceName == TargetHostname
+| where RemotePort in (TorPorts)
+| project Timestamp, DeviceName, ActionType, RemoteIP, RemotePort, RemoteUrl, InitiatingProcessFileName, InitiatingProcessCommandLine
+| order by Timestamp desc
+```
+
+![DeviceNetworkEvents](assets/device-network-events.png)
+
+**MITRE:** T1090.003 — Proxy: Multi-hop Proxy (TOR)
+
+---
+
+### Artifact Concealment — Indicator Removal
+
+During the active TOR session, the file `tor-shopping-list.txt` was created on the Desktop and subsequently deleted. Combined with the portable installation method, this pattern indicates the user was aware of forensic artifacts and took deliberate steps to limit trace evidence.
+
+**MITRE:** T1070 — Indicator Removal
+
+---
+
+## IOC Summary
+
+| Type | Value |
+|---|---|
+| Endpoint | `abel-win11-vm` |
+| Subject account | `lababel` |
+| TOR binary | Portable TOR Browser 15.0.14 |
+| Execution path | `C:\Users\lababel\Desktop\` |
+| External relay | `203.55.81.1:9001` |
+| Local SOCKS proxy | `127.0.0.1:9150` |
+| Local control port | `127.0.0.1:9151` |
+| Deleted artifact | `tor-shopping-list.txt` (Desktop) |
+
+---
+
+## Supporting Documentation
+
+| Document | Description |
+|---|---|
+| [KQL Detection Queries](detection/kql-queries.md) | All queries used to surface TOR indicators across three MDE tables |
+| [Findings Report](report/findings.md) | Full timeline, analysis, and escalation recommendation |
+
+---
 
 ## MITRE ATT&CK Coverage
 
@@ -48,4 +127,4 @@ The user "lababel" on the "abel-win11-vm" device initiated and completed the ins
 | T1090.003 | Proxy: Multi-hop Proxy (TOR) | Defense Evasion / C2 |
 | T1204 | User Execution | Execution |
 | T1036 | Masquerading | Defense Evasion |
-
+| T1070 | Indicator Removal | Defense Evasion |
