@@ -9,7 +9,7 @@
 
 ## Overview
 
-Implemented and verified 12 DISA STIG security controls on a Windows 11 Azure VM using PowerShell. Each script targets a specific STIG finding, applies the required configuration via registry or security policy, and was validated before and after execution.
+Implemented and verified DISA STIG security controls on a Windows 11 Azure VM using PowerShell. Each script targets a specific STIG finding, applies the required configuration via registry or security policy, and was validated before and after execution.
 
 | # | STIG-ID | Category | Control | Script | Result |
 |---|---------|----------|---------|--------|--------|
