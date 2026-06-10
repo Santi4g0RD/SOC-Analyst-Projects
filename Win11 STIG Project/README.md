@@ -1,4 +1,4 @@
-# DISA STIG: System Hardening — 12 Windows 11 Controls Automated with PowerShell on Azure
+# DISA STIG: System Hardening — Windows 11 Controls Automated with PowerShell on Azure
 
 **Author:** Santiago Abel Ruiz Diaz
 **Platform:** Microsoft Azure
