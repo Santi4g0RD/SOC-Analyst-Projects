@@ -13,6 +13,49 @@ A full-chain compromise of a cloud-hosted electronic health record system runnin
 
 ---
 
+## Hunt Methodology
+
+**Starting point:** No alerts fired. No ransomware, no outage, no detection. The hunt was initiated on a tip that the EHR system may have been accessed outside normal business hours — not a confirmed incident, just an anomaly flag.
+
+**Hypothesis:** If a legitimate admin account was compromised, the attacker would blend into normal operational traffic. Standard alert-based detection wouldn't surface it. The hunt had to start from behavior, not signatures.
+
+**Phase 1 — Logon analysis as the anchor.** I started with `DeviceLogonEvents`, grouping all successful logons to `rocky83` by `RemoteIP` and `AccountName`. The goal was to surface anything that didn't fit the normal session pattern. VPN rotation appeared immediately — the same account logging in from 6+ different IP ranges, each IP used once or twice and never returning. That's not a human, that's tradecraft.
+
+**Phase 2 — Session reconstruction.** Once the suspicious logon window was identified, I joined logon events to process events to anchor every command to a specific session. This is how the `w` command surfaced — the first thing run after login, before anything else. That's an OPSEC tell, not a normal admin behavior.
+
+**Phase 3 — Following the operator's goals.** After confirming the session, I let the attacker's actions guide the query sequence: recon → privilege escalation → credential access → persistence → C2 → collection → exfiltration → cleanup. Each phase opened the next. The Docker inspection led to volume enumeration. Volume enumeration led to the credential file. The credential file explained why the database dump was so targeted.
+
+**Phase 4 — Pivoting on evasion attempts.** The defense evasion phase was actually the most useful pivot point. When `sed -i` operations appeared on `/var/log/secure` and `/var/log/messages`, that confirmed the operator knew they'd been loud and was cleaning up selectively — 12 specific deletions, not a full log wipe. Selective cleanup means they knew exactly which lines to remove, which means the same lines existed in EDR telemetry.
+
+---
+
+## Key Analyst Observations
+
+These findings required active reasoning — they wouldn't appear in a standard alert queue:
+
+**1. No alerts, no outage — the hunt had to be proactive.**
+MDE generated no high-severity alerts for the majority of the attack chain. The operator used a legitimate account, legitimate tools (`cat`, `curl`, `systemctl`), and legitimate services (Discord CDN). Detection required behavioral analysis across 6 log tables, not alert triage.
+
+**2. VPN rotation as a positive signal.**
+Each source IP logged in once or twice and was never reused — a pattern that defeats IP-based detection rules. Grouping by `RemoteIP` with `summarize count()` turns the evasion technique into a detection signal: legitimate admins don't rotate IPs like this.
+
+**3. `w` as an OPSEC indicator.**
+The first command run after every suspicious logon was `w` — checking who else is logged in. Normal admins don't run `w` before doing anything else. It's a red team OPSEC step that only makes sense if you're worried about being observed. Surfaced by joining logon events to process events and sorting by time.
+
+**4. `vipw` to bypass account-creation telemetry.**
+The rogue `system` account was created by writing directly to `/etc/passwd` and `/etc/shadow` using `vipw` — not `useradd` or `adduser`, which generate dedicated audit events. The account only became visible by grouping all logon successes by `AccountName` and spotting `system` with 1,092 logon events — an account that shouldn't exist on this host.
+
+**5. `cat` instead of an editor to avoid swap files.**
+The persistence service (`integration-monitor.service`) was written using `cat > /etc/systemd/system/...` rather than `vim` or `nano`. This avoids editor swap files (`.swp`, `.un~`) that would leave additional forensic artifacts. The `InitiatingProcessFileName` field in `DeviceFileEvents` exposed this — it was `cat`, not an editor.
+
+**6. SCP blocked → Discord webhook pivot.**
+Direct exfiltration via `scp` failed at the network level. The operator pivoted to posting the archive to a Discord webhook over HTTPS — legitimate traffic to `162.159.135.232:443` (Discord's Cloudflare CDN). The `DeviceNetworkEvents` `ActionType` field on the `scp` attempt showed failure; the subsequent `curl` to Discord showed success. Both events are in the same 30-minute window.
+
+**7. Surgical log cleanup exposes the exact event window.**
+Rather than wiping entire log files, the operator ran 12 targeted `sed -i` deletions against specific lines in `/var/log/secure` and `/var/log/messages`. Surgical cleanup tells you exactly what the operator considered "loud" — and those same events were already captured in EDR telemetry. The cleanup attempt confirmed the timeline rather than obscuring it.
+
+---
+
 ## Environment
 
 | Component | Details |
