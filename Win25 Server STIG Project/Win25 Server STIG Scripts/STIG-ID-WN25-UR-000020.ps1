@@ -50,4 +50,4 @@ secedit /configure /db $tempSdb /cfg $tempCfg /quiet
 Remove-Item $tempCfg -Force -ErrorAction SilentlyContinue
 Remove-Item $tempSdb -Force -ErrorAction SilentlyContinue
 
-Write-Host "SeDenyServiceLogonRight — Guests denied log on as a service."
+Write-Host "SeDenyServiceLogonRight - Guests denied log on as a service."

@@ -35,4 +35,4 @@ if (-not (Test-Path $registryPath)) {
 
 Set-ItemProperty -Path $registryPath -Name $valueName -Value $valueData -Type DWord
 
-Write-Host "LAN Manager authentication level set to 5 (NTLMv2 only — LM and NTLM refused)."
+Write-Host "LAN Manager authentication level set to 5 (NTLMv2 only - LM and NTLM refused)."

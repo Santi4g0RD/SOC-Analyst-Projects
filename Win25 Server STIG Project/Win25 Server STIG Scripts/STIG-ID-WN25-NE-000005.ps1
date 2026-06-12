@@ -35,4 +35,4 @@ if (-not (Test-Path $registryPath)) {
 
 Set-ItemProperty -Path $registryPath -Name $valueName -Value $valueData -Type DWord
 
-Write-Host "ICMP redirect acceptance disabled (EnableICMPRedirect = 0) — routing table cannot be overridden via ICMP."
+Write-Host "ICMP redirect acceptance disabled (EnableICMPRedirect = 0) - routing table cannot be overridden via ICMP."

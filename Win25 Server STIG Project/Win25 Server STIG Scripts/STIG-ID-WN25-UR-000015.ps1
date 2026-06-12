@@ -51,4 +51,4 @@ secedit /configure /db $tempSdb /cfg $tempCfg /quiet
 Remove-Item $tempCfg -Force -ErrorAction SilentlyContinue
 Remove-Item $tempSdb -Force -ErrorAction SilentlyContinue
 
-Write-Host "SeDenyBatchLogonRight — Guests denied log on as a batch job."
+Write-Host "SeDenyBatchLogonRight - Guests denied log on as a batch job."

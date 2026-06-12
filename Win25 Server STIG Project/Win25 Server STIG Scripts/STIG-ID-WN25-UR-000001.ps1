@@ -39,4 +39,4 @@ secedit /configure /db $tempSdb /cfg $tempCfg /quiet
 Remove-Item $tempCfg -Force -ErrorAction SilentlyContinue
 Remove-Item $tempSdb -Force -ErrorAction SilentlyContinue
 
-Write-Host "SeTcbPrivilege (Act as part of the operating system) cleared — no accounts assigned."
+Write-Host "SeTcbPrivilege (Act as part of the operating system) cleared - no accounts assigned."

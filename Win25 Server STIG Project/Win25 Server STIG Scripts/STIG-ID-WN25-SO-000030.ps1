@@ -27,7 +27,7 @@
 
 $registryPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
 $valueName    = "CachedLogonsCount"
-$valueData    = "4"  # String type — max cached credentials
+$valueData    = "4"  # String type - max cached credentials
 
 if (-not (Test-Path $registryPath)) {
     New-Item -Path $registryPath -Force | Out-Null

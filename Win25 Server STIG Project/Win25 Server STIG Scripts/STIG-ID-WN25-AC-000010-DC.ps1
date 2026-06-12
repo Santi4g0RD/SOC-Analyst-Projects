@@ -25,7 +25,7 @@
     PS C:\> .\STIG-ID-WN25-AC-000010-DC.ps1
 
 .NOTES
-    DC variant — uses Set-ADDefaultDomainPasswordPolicy instead of secedit.
+    DC variant - uses Set-ADDefaultDomainPasswordPolicy instead of secedit.
 #>
 
 Import-Module ActiveDirectory

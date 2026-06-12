@@ -35,4 +35,4 @@ if (-not (Test-Path $registryPath)) {
 
 Set-ItemProperty -Path $registryPath -Name $valueName -Value $valueData -Type DWord
 
-Write-Host "WDigest authentication disabled (UseLogonCredential = 0) — plaintext credentials will not be cached in LSASS."
+Write-Host "WDigest authentication disabled (UseLogonCredential = 0) - plaintext credentials will not be cached in LSASS."

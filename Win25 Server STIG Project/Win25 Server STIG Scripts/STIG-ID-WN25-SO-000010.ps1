@@ -27,7 +27,7 @@
 
 $registryPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"
 $valueName    = "NoDriveTypeAutoRun"
-$valueData    = 255  # 0xFF — disable AutoRun on all drive types
+$valueData    = 255  # 0xFF - disable AutoRun on all drive types
 
 if (-not (Test-Path $registryPath)) {
     New-Item -Path $registryPath -Force | Out-Null
