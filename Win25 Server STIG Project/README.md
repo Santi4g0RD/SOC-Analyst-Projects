@@ -32,7 +32,7 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 | 15 | WN25-SO-000025 | Security Options | NTLM min session security (server) | [📄](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000025.ps1) | ✅ Pass |
 | 16 | WN25-SO-000030 | Security Options | Cached credentials ≤ 4 | [📄](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000030.ps1) | ✅ Pass |
 | 17 | WN25-SO-000035 | Security Options | WDigest authentication disabled | [📄](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000035.ps1) | ✅ Pass |
-| 18 | WN25-SO-000040 | Security Options | Don't display last username at logon | [📄](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000040.ps1) | ⬜ Pending |
+| 18 | WN25-SO-000040 | Security Options | Don't display last username at logon | [📄](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000040.ps1) | ✅ Pass |
 | 19 | WN25-SO-000070 | Security Options | UAC credential prompt on secure desktop | [📄](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000070.ps1) | ✅ Pass |
 | 20 | WN25-UR-000001 | User Rights | Act as part of OS — no accounts assigned | [📄](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-UR-000001.ps1) | ✅ Pass |
 | 21 | WN25-UR-000005 | User Rights | Debug programs — Administrators only | [📄](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-UR-000005.ps1) | ✅ Pass |
@@ -248,9 +248,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** The system must not display the last signed-in username at the logon screen.
 **Registry:** `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System`
 **Value:** `DontDisplayLastUserName = 1`
-**Before:** ⬜ Pending
-**After:** ⬜ Pending
-**Result:** ⬜ Pending
+**Before:** `DontDisplayLastUserName = 0` — last username displayed at logon (non-compliant)
+**After:** `DontDisplayLastUserName = 1` — last username no longer displayed
+**Result:** ✅ Pass
 
 **Script:** [STIG-ID-WN25-SO-000040.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000040.ps1)
 
