@@ -65,10 +65,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `MaxSize = 1024000`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-AU-000500-before.png)
+
 **Script:** [STIG-ID-WN25-AU-000500.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-AU-000500.ps1)
 
----
+![Verify: After](./screenshots/WN25-AU-000500-after.png)
 
+---
 ### WN25-AU-000505 — Application Event Log Size
 
 **Rule:** The Application event log must be at least 32768 KB (32 MB).
@@ -78,10 +81,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `MaxSize = 32768`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-AU-000505-before.png)
+
 **Script:** [STIG-ID-WN25-AU-000505.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-AU-000505.ps1)
 
----
+![Verify: After](./screenshots/WN25-AU-000505-after.png)
 
+---
 ### WN25-AU-000510 — System Event Log Size
 
 **Rule:** The System event log must be at least 32768 KB (32 MB).
@@ -91,10 +97,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `MaxSize = 32768`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-AU-000510-before.png)
+
 **Script:** [STIG-ID-WN25-AU-000510.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-AU-000510.ps1)
 
----
+![Verify: After](./screenshots/WN25-AU-000510-after.png)
 
+---
 ## Account Policy
 
 > **Note — DC vs Standalone:** On a Domain Controller, `secedit` only applies to local accounts. Domain account lockout policy must be set via `Set-ADDefaultDomainPasswordPolicy` (the `-DC` scripts). Both were run on WS25-DC01.
@@ -108,10 +117,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** Local: 15 min / Domain: 15 min
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-AC-000005-before.png)
+
 **Scripts:** [STIG-ID-WN25-AC-000005.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-AC-000005.ps1) · [STIG-ID-WN25-AC-000005-DC.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-AC-000005-DC.ps1)
 
----
+![Verify: After](./screenshots/WN25-AC-000005-after.png)
 
+---
 ### WN25-AC-000010 — Account Lockout Threshold
 
 **Rule:** Account lockout threshold must be 3 or fewer invalid logon attempts.
@@ -121,10 +133,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** Local: 3 / Domain: 3
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-AC-000010-before.png)
+
 **Scripts:** [STIG-ID-WN25-AC-000010.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-AC-000010.ps1) · [STIG-ID-WN25-AC-000010-DC.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-AC-000010-DC.ps1)
 
----
+![Verify: After](./screenshots/WN25-AC-000010-after.png)
 
+---
 ### WN25-AC-000015 — Reset Account Lockout Counter
 
 **Rule:** Reset account lockout counter must be 15 minutes or greater.
@@ -134,10 +149,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** Local: 15 min / Domain: 15 min
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-AC-000015-before.png)
+
 **Scripts:** [STIG-ID-WN25-AC-000015.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-AC-000015.ps1) · [STIG-ID-WN25-AC-000015-DC.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-AC-000015-DC.ps1)
 
----
+![Verify: After](./screenshots/WN25-AC-000015-after.png)
 
+---
 ## Security Options
 
 ### WN25-SO-000001 — LAN Manager Authentication Level
@@ -149,10 +167,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `LmCompatibilityLevel = 5`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000001-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000001.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000001.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000001-after.png)
 
+---
 ### WN25-SO-000005 — Guest Account Disabled
 
 **Rule:** The built-in Guest account must be disabled.
@@ -161,10 +182,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** Guest account confirmed disabled (`Enabled = False`)
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000005-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000005.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000005.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000005-after.png)
 
+---
 ### WN25-SO-000010 — AutoRun Disabled
 
 **Rule:** AutoRun must be disabled for all drives.
@@ -174,10 +198,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `NoDriveTypeAutoRun = 255`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000010-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000010.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000010.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000010-after.png)
 
+---
 ### WN25-SO-000015 — Restrict Anonymous SAM Enumeration
 
 **Rule:** Anonymous enumeration of SAM accounts must be restricted.
@@ -187,10 +214,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `RestrictAnonymousSAM = 1`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000015-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000015.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000015.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000015-after.png)
 
+---
 ### WN25-SO-000020 — Restrict Anonymous Share Enumeration
 
 **Rule:** Anonymous enumeration of shares must be restricted.
@@ -200,10 +230,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `RestrictAnonymous = 1`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000020-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000020.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000020.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000020-after.png)
 
+---
 ### WN25-SO-000025 — NTLM Minimum Session Security (Server)
 
 **Rule:** NTLM must be configured to require NTLMv2 session security and 128-bit encryption on the server side.
@@ -213,10 +246,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `NtlmMinServerSec = 537395200`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000025-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000025.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000025.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000025-after.png)
 
+---
 ### WN25-SO-000030 — Cached Credentials Limit
 
 **Rule:** The number of cached credentials must be limited to 4 or fewer.
@@ -226,10 +262,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `CachedLogonsCount = 4`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000030-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000030.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000030.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000030-after.png)
 
+---
 ### WN25-SO-000035 — WDigest Authentication Disabled
 
 **Rule:** WDigest authentication must be disabled to prevent plaintext passwords in memory.
@@ -239,10 +278,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `UseLogonCredential = 0`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000035-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000035.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000035.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000035-after.png)
 
+---
 ### WN25-SO-000040 — Don't Display Last Username
 
 **Rule:** The system must not display the last signed-in username at the logon screen.
@@ -252,10 +294,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `DontDisplayLastUserName = 1` — last username no longer displayed
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000040-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000040.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000040.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000040-after.png)
 
+---
 ### WN25-SO-000070 — UAC Elevation Prompt
 
 **Rule:** UAC must prompt administrators for credentials on the secure desktop.
@@ -265,10 +310,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `ConsentPromptBehaviorAdmin = 1` (prompt for credentials on secure desktop)
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-SO-000070-before.png)
+
 **Script:** [STIG-ID-WN25-SO-000070.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-SO-000070.ps1)
 
----
+![Verify: After](./screenshots/WN25-SO-000070-after.png)
 
+---
 ## User Rights & Privileges
 
 ### WN25-UR-000001 — Act as Part of the Operating System (CAT I)
@@ -279,10 +327,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `SeTcbPrivilege` cleared — no accounts assigned
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-UR-000001-before.png)
+
 **Script:** [STIG-ID-WN25-UR-000001.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-UR-000001.ps1)
 
----
+![Verify: After](./screenshots/WN25-UR-000001-after.png)
 
+---
 ### WN25-UR-000005 — Debug Programs (CAT I)
 
 **Rule:** The "Debug programs" right must only be assigned to Administrators.
@@ -291,10 +342,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `SeDebugPrivilege = *S-1-5-32-544` — confirmed Administrators only
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-UR-000005-before.png)
+
 **Script:** [STIG-ID-WN25-UR-000005.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-UR-000005.ps1)
 
----
+![Verify: After](./screenshots/WN25-UR-000005-after.png)
 
+---
 ### WN25-UR-000015 — Deny Logon as Batch Job
 
 **Rule:** Guest account must be denied the right to log on as a batch job.
@@ -303,10 +357,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** Script confirmed — Guests denied log on as a batch job
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-UR-000015-before.png)
+
 **Script:** [STIG-ID-WN25-UR-000015.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-UR-000015.ps1)
 
----
+![Verify: After](./screenshots/WN25-UR-000015-after.png)
 
+---
 ### WN25-UR-000020 — Deny Logon as a Service
 
 **Rule:** Guest account must be denied the right to log on as a service.
@@ -315,10 +372,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** Script confirmed — Guests denied log on as a service
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-UR-000020-before.png)
+
 **Script:** [STIG-ID-WN25-UR-000020.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-UR-000020.ps1)
 
----
+![Verify: After](./screenshots/WN25-UR-000020-after.png)
 
+---
 ### WN25-UR-000025 — Manage Auditing and Security Log
 
 **Rule:** The "Manage auditing and security log" right must only be assigned to Administrators.
@@ -327,10 +387,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `SeSecurityPrivilege` restricted to Administrators only — confirmed
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-UR-000025-before.png)
+
 **Script:** [STIG-ID-WN25-UR-000025.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-UR-000025.ps1)
 
----
+![Verify: After](./screenshots/WN25-UR-000025-after.png)
 
+---
 ### WN25-UR-000030 — Create a Token Object
 
 **Rule:** The "Create a token object" right must not be assigned to any accounts.
@@ -339,10 +402,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `SeCreateTokenPrivilege` cleared — no accounts assigned
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-UR-000030-before.png)
+
 **Script:** [STIG-ID-WN25-UR-000030.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-UR-000030.ps1)
 
----
+![Verify: After](./screenshots/WN25-UR-000030-after.png)
 
+---
 ### WN25-UR-000035 — Take Ownership of Files or Objects
 
 **Rule:** The "Take ownership of files or other objects" right must only be assigned to Administrators.
@@ -351,10 +417,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `SeTakeOwnershipPrivilege` restricted to Administrators only — confirmed
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-UR-000035-before.png)
+
 **Script:** [STIG-ID-WN25-UR-000035.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-UR-000035.ps1)
 
----
+![Verify: After](./screenshots/WN25-UR-000035-after.png)
 
+---
 ## Remote Access & Network
 
 ### WN25-CC-000035 — Remote Desktop NLA Required
@@ -366,10 +435,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `UserAuthentication = 1` — NLA enforced
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-CC-000035-before.png)
+
 **Script:** [STIG-ID-WN25-CC-000035.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-CC-000035.ps1)
 
----
+![Verify: After](./screenshots/WN25-CC-000035-after.png)
 
+---
 ### WN25-CC-000040 — Disable SMBv1
 
 **Rule:** SMBv1 protocol must be disabled.
@@ -379,10 +451,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `EnableSMB1Protocol = False` — confirmed disabled
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-CC-000040-before.png)
+
 **Script:** [STIG-ID-WN25-CC-000040.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-CC-000040.ps1)
 
----
+![Verify: After](./screenshots/WN25-CC-000040-after.png)
 
+---
 ## Windows Firewall
 
 ### WN25-FW-000001 — Domain Profile Firewall Enabled
@@ -395,8 +470,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Script:** [STIG-ID-WN25-FW-000001.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-FW-000001.ps1)
 
----
+![Verify: After](./screenshots/WN25-FW-000001-after.png)
 
+---
 ### WN25-FW-000002 — Private Profile Firewall Enabled
 
 **Rule:** Windows Firewall must be enabled for the Private profile.
@@ -405,10 +481,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `Private Enabled = True` — confirmed
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-FW-000002-before.png)
+
 **Script:** [STIG-ID-WN25-FW-000002.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-FW-000002.ps1)
 
----
+![Verify: After](./screenshots/WN25-FW-000002-after.png)
 
+---
 ### WN25-FW-000003 — Public Profile Firewall Enabled
 
 **Rule:** Windows Firewall must be enabled for the Public profile.
@@ -417,10 +496,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `Public Enabled = True` — confirmed
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-FW-000003-before.png)
+
 **Script:** [STIG-ID-WN25-FW-000003.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-FW-000003.ps1)
 
----
+![Verify: After](./screenshots/WN25-FW-000003-after.png)
 
+---
 ### WN25-FW-000010 — Domain Profile Inbound Default Block
 
 **Rule:** Inbound connections not matching a rule must be blocked on the Domain profile.
@@ -429,10 +511,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `DefaultInboundAction = Block`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-FW-000010-before.png)
+
 **Script:** [STIG-ID-WN25-FW-000010.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-FW-000010.ps1)
 
----
+![Verify: After](./screenshots/WN25-FW-000010-after.png)
 
+---
 ### WN25-FW-000015 — Public Profile Inbound Default Block
 
 **Rule:** Inbound connections not matching a rule must be blocked on the Public profile.
@@ -441,10 +526,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `DefaultInboundAction = Block`
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-FW-000015-before.png)
+
 **Script:** [STIG-ID-WN25-FW-000015.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-FW-000015.ps1)
 
----
+![Verify: After](./screenshots/WN25-FW-000015-after.png)
 
+---
 ## Network Hardening
 
 ### WN25-NE-000001 — IPv6 Source Routing
@@ -456,10 +544,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `DisableIPSourceRouting = 2` — highest protection level
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-NE-000001-before.png)
+
 **Script:** [STIG-ID-WN25-NE-000001.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-NE-000001.ps1)
 
----
+![Verify: After](./screenshots/WN25-NE-000001-after.png)
 
+---
 ### WN25-NE-000005 — ICMP Redirects Disabled
 
 **Rule:** The system must not allow ICMP redirects to override routing table entries.
@@ -469,10 +560,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `EnableICMPRedirect = 0` — ICMP redirects disabled
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-NE-000005-before.png)
+
 **Script:** [STIG-ID-WN25-NE-000005.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-NE-000005.ps1)
 
----
+![Verify: After](./screenshots/WN25-NE-000005-after.png)
 
+---
 ### WN25-NE-000010 — NetBIOS over TCP/IP Disabled
 
 **Rule:** NetBIOS over TCP/IP must be disabled on all network adapters where not required.
@@ -481,10 +575,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **After:** `TcpipNetbiosOptions = 2` — NetBIOS disabled on all adapters
 **Result:** ✅ Pass
 
+![Verify: Before](./screenshots/WN25-NE-000010-before.png)
+
 **Script:** [STIG-ID-WN25-NE-000010.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-NE-000010.ps1)
 
----
+![Verify: After](./screenshots/WN25-NE-000010-after.png)
 
+---
 ## Testing Environment
 
 | Detail | Value |
