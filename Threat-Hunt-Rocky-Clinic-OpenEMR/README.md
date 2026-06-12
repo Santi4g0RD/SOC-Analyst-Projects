@@ -1,15 +1,42 @@
 # Threat Hunt: Rocky Clinic OpenEMR Breach
+## Incident Investigation Report
+
+**Analyst:** Santiago Abel Ruiz Diaz
+**Incident ID:** IR-2026-0214-EHR
+**Environment:** Microsoft Sentinel / Microsoft Defender for Endpoint (`rocky83`)
+**Severity:** Critical
+**Status:** Confirmed compromise — full-chain breach with exfiltration
+**Investigation Window:** 4–14 February 2026 UTC
+**Data Sources:** `DeviceLogonEvents`, `DeviceProcessEvents`, `DeviceFileEvents`, `DeviceNetworkEvents`, `DeviceInfo`, `AlertEvidence`
+
+---
 
 ![Mission Brief](assets/mission-brief.png)
 
-## Overview
+---
 
-A full-chain compromise of a cloud-hosted electronic health record system running OpenEMR in Docker on Azure. **No ransomware, no alerts, no outage.** The attacker operated entirely under a legitimate admin account, blended persistence into trusted OS tooling, and exfiltrated patient data through a Discord webhook after direct transfer was blocked by network controls.
+## Executive Summary
 
-**Environment:** Microsoft Sentinel / Microsoft Defender for Endpoint (MDE)  
-**Investigation Window:** 4–14 February 2026 UTC  
-**Platform:** Azure — Rocky Linux VM → Docker (docker-compose) → OpenEMR + MariaDB  
-**Analyst:** Abel
+A cloud-hosted electronic health record system running OpenEMR in Docker on Azure was fully compromised over a 10-day window. **No ransomware. No service outage. No high-severity alerts fired.** The attacker operated exclusively under a legitimate admin account (`it.admin`), used commercial VPN rotation to defeat IP-based detection, and blended every action into trusted OS tooling and scheduled workflows.
+
+The attacker established root access, read database credentials from a configuration file, installed two independent persistence mechanisms — a rogue local account and a systemd service delivering a Python reverse shell — and exfiltrated a staged archive of patient data via a Discord webhook after a direct SCP transfer was blocked at the network perimeter.
+
+The breach was identified through proactive behavioral hunting, not alert triage. The 10-day dwell time, dual persistence, and surgical log cleanup indicate a deliberate, patient operator with familiarity with Linux host forensics and EDR evasion.
+
+---
+
+## Key Findings
+
+- **Dwell time:** 10 days (2026-02-04 to 2026-02-14)
+- **Initial access:** Unattributed — likely prior credential compromise via the OpenEMR web interface
+- **Privilege escalation:** `sudo -i` from `it.admin` → full interactive root shell
+- **Credential access:** DB credentials read from `/etc/openemr/audit_export.env`
+- **Persistence 1:** Rogue `system` account created via `vipw` — bypassing `useradd` telemetry
+- **Persistence 2:** Systemd service (`integration-monitor.service`) delivering Python reverse shell on every boot
+- **C2:** Python3 reverse shell → `20.62.27.80:443`
+- **Exfiltration:** Patient data archive posted to Discord webhook (`162.159.135.232:443`) after SCP was blocked
+- **Defense evasion:** 12 selective `sed -i` deletions across `/var/log/secure` and `/var/log/messages` + timestamp forgery via `touch`
+- **EDR coverage:** MDE captured all activity despite log cleanup — EDR telemetry was not affected by host-level log manipulation
 
 ---
 
@@ -488,6 +515,44 @@ AlertEvidence
 
 ---
 
+## Timeline of Notable Events
+
+| Time (UTC) | Event |
+|---|---|
+| 2026-02-04 | Earliest confirmed operator activity on `rocky83` |
+| 2026-02-06 | `docker inspect openemr-mariadb` — container interrogation (first instance) |
+| 2026-02-07 01:11 | `cat /etc/openemr/audit_export.env` — DB credentials read as root |
+| 2026-02-08 16:25 | First confirmed suspicious SSH logon from `37.19.221.234` (Amsterdam, NL) |
+| 2026-02-09 | `docker inspect` repeated — second container interrogation |
+| 2026-02-10 18:10 | `/opt/backup/scripts/backup_manifest.sh` modified — staging logic injected |
+| 2026-02-10 22:00 | `integration_state_2026-02-10_22-00-01.tar.gz` created at `/var/lib/integrations` |
+| 2026-02-11 04:16 | `systemd` fires `integration-monitor.service` — Python reverse shell to `20.62.27.80:443` |
+| 2026-02-11 04:18 | `/bin/sh -i` PID 8000 — interactive operator session via C2 |
+| 2026-02-11 ~04:30 | `scp` exfiltration attempt — blocked at network perimeter |
+| 2026-02-11 16:13 | 12 selective `sed -i` deletions across `/var/log/secure` and `/var/log/messages` |
+| 2026-02-11 16:16 | `touch` backdates `/var/log/messages` to 2026-02-06 12:00:00 — EDR alert fires |
+| 2026-02-13 ~20:00 | `curl` POST to Discord webhook — patient data archive exfiltrated |
+| 2026-02-14 | Investigation window closes |
+
+---
+
+## Impact Assessment
+
+| Category | Finding |
+|---|---|
+| Confirmed compromise | Yes |
+| Dwell time | 10 days |
+| Root access obtained | Yes — via `sudo -i` from `it.admin` |
+| Credentials compromised | Yes — DB credentials from `/etc/openemr/audit_export.env` |
+| Patient data exfiltrated | Yes — MariaDB archive (`integration_state_2026-02-10_22-00-01.tar.gz`) posted to Discord |
+| Persistence established | Yes — two independent mechanisms (rogue account + systemd service) |
+| C2 active | Yes — Python reverse shell to `20.62.27.80:443` |
+| Log tampering | Yes — 12 selective deletions + timestamp forgery (ineffective against EDR) |
+| Service disruption | None — breach operated entirely under legitimate tooling |
+| Regulatory exposure | Likely — patient health records in scope (HIPAA applicability) |
+
+---
+
 ## IOC Summary
 
 | Type | Value |
@@ -507,8 +572,60 @@ AlertEvidence
 
 ---
 
+## MITRE ATT&CK Mapping
+
+| Tactic | Technique | ID | Detail |
+|---|---|---|---|
+| Initial Access | External Remote Services | T1133 | SSH access as `it.admin` from VPN-rotating IPs |
+| Discovery | System Information Discovery | T1082 | One-shot OS fingerprint via concatenated release files |
+| Discovery | File and Directory Discovery | T1083 | Recursive Docker volume enumeration via `find` |
+| Privilege Escalation | Abuse Elevation Control Mechanism: Sudo | T1548.003 | `sudo -i` → full interactive root shell |
+| Credential Access | Unsecured Credentials: Credentials in Files | T1552.001 | DB credentials read from `/etc/openemr/audit_export.env` |
+| Persistence | Create Account: Local Account | T1136.001 | Rogue `system` account via `vipw` — bypassed `useradd` telemetry |
+| Persistence | Create or Modify System Process: Systemd Service | T1543.002 | `integration-monitor.service` delivers Python reverse shell on boot |
+| Command & Control | Non-Standard Port | T1571 | Python reverse shell to `20.62.27.80:443` |
+| Command & Control | Command and Scripting Interpreter: Python | T1059.006 | Python3 reverse shell spawned by systemd |
+| Collection | Local Data Staging | T1074.001 | Archive staged at `/var/lib/integrations` via hijacked backup script |
+| Collection | Archive Collected Data | T1560.001 | Patient data compressed as `.tar.gz` |
+| Exfiltration | Exfiltration Over Web Service | T1567 | `curl` POST to Discord webhook (Cloudflare CDN) |
+| Exfiltration | Exfiltration Over Alternative Protocol | T1048 | SCP attempted and blocked; Discord HTTPS succeeded |
+| Defense Evasion | Indicator Removal: Clear Linux Logs | T1070.003 | 12 selective `sed -i` deletions from `/var/log/secure` and `/var/log/messages` |
+| Defense Evasion | Indicator Removal: Timestomp | T1070.006 | `touch` used to backdate `/var/log/messages` to 2026-02-06 |
+
+---
+
+## Containment & Remediation
+
+### Immediate Containment
+1. **Isolate the host** — remove `rocky83` from the network pending full forensic review
+2. **Disable `it.admin`** and revoke all active sessions and SSH keys
+3. **Remove the rogue `system` account** — delete entries from `/etc/passwd` and `/etc/shadow`; verify no cron jobs or processes run as `system`
+4. **Disable and delete `integration-monitor.service`** — `systemctl disable integration-monitor && systemctl stop integration-monitor && rm /etc/systemd/system/integration-monitor.service`
+5. **Block C2 IP** `20.62.27.80` at the network perimeter
+6. **Rotate all credentials** in `/etc/openemr/audit_export.env` — DB password, API keys, any service accounts
+7. **Restore `/var/log/secure` and `/var/log/messages`** from backup or reconstruct from EDR telemetry
+
+### Near-Term Hardening
+1. **Rotate all MariaDB and OpenEMR application credentials** — assume full DB access was achieved
+2. **Audit `/etc/systemd/system/`** for additional rogue service units beyond `integration-monitor.service`
+3. **Audit `/opt/backup/scripts/`** and all scheduled tasks/crons for further modifications
+4. **Review all local accounts** on the host — run `getent passwd` and cross-reference against the expected user baseline
+5. **Restrict `sudo` configuration** — `sudo -i` grants a full root shell; scope sudo rules to specific commands only
+6. **Move credentials to a secrets manager** (e.g., Azure Key Vault) — flat `.env` files accessible as root are a single `cat` away from full credential access
+7. **Tighten egress firewall rules** — SCP to unknown IPs was blocked; extend controls to HTTPS POST from EHR hosts to consumer SaaS endpoints (Discord, Slack, etc.)
+
+### Strategic Improvements
+1. **Alert on `vipw` execution** — direct writes to `/etc/passwd` and `/etc/shadow` are never a normal admin operation; this should be a high-fidelity alert
+2. **Alert on new files under `/etc/systemd/system/`** — creation of service unit files outside a known change window should trigger review
+3. **Alert on `curl` POST from server-class hosts to SaaS CDNs** — `curl -X POST` from an EHR server to `discord.com` or `discordapp.com` is not expected traffic
+4. **Implement file integrity monitoring (FIM)** on `/etc/passwd`, `/etc/shadow`, `/etc/systemd/system/`, and application credential files
+5. **Restrict SSH access** — implement IP allowlisting or require VPN/bastion for SSH to healthcare data systems; eliminate direct internet-facing SSH
+6. **Alert on impossible travel and IP rotation** — the same account logging in from 6 different IP ranges in a 10-day window is detectable with a simple `summarize count() by RemoteIP` grouped by account
+
+---
+
 ## Full Hunt Notes
 
 For the complete question-by-question KQL walkthrough and per-finding analysis, see [hunt-notes.md](hunt-notes.md).
 
-**Key skills demonstrated:** KQL threat hunting across 6 MDE/Sentinel tables, Linux host forensics, Docker container attack surface analysis, persistence mechanism identification (account + systemd), C2 and exfiltration path reconstruction, MITRE ATT&CK mapping.
+**Key skills demonstrated:** Proactive behavioral threat hunting across 6 MDE/Sentinel tables, Linux host forensics, Docker container attack surface analysis, persistence mechanism identification (account + systemd), C2 and exfiltration path reconstruction, MITRE ATT&CK mapping, IR lifecycle (detect → analyze → contain → remediate).
