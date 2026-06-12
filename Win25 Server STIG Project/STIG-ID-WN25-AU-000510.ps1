@@ -4,8 +4,8 @@
 
 .NOTES
     Author          : Santiago Abel Ruiz Diaz
-    LinkedIn        : linkedin.com/in/
-    GitHub          : github.com/
+    LinkedIn        : linkedin.com/in/santiago-a-ruiz-diaz-4aa418b2/
+    GitHub          : github.com/Santi4g0RD
     Date Created    : 2026-06-10
     Last Modified   : 2026-06-10
     Version         : 1.0
