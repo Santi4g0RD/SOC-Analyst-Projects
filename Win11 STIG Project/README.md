@@ -39,11 +39,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** `MaxSize = 32768`
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-AU-000500-fail.png)
 
 **Script:** [STIG-ID-WN11-AU-000500.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-AU-000500.ps1)
 
-![Verify: Pass](./screenshots/WN11-AU-000500-pass.png)
 
 ---
 
@@ -56,11 +54,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** `MaxSize = 1024000`
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-AU-000505-fail.png)
 
 **Script:** [STIG-ID-WN11-AU-000505.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-AU-000505.ps1)
 
-![Verify: Pass](./screenshots/WN11-AU-000505-pass.png)
 
 ---
 
@@ -73,11 +69,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** `MaxSize = 32768`
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-AU-000510-fail.png)
 
 **Script:** [STIG-ID-WN11-AU-000510.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-AU-000510.ps1)
 
-![Verify: Pass](./screenshots/WN11-AU-000510-pass.png)
 
 ---
 
@@ -91,11 +85,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** Lockout duration: 15 minutes
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-AC-000005-fail.png)
 
 **Script:** [STIG-ID-WN11-AC-000005.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-AC-000005.ps1)
 
-![Verify: Pass](./screenshots/WN11-AC-000005-pass.png)
 
 ---
 
@@ -107,11 +99,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** Lockout threshold: 3 attempts
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-AC-000010-fail.png)
 
 **Script:** [STIG-ID-WN11-AC-000010.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-AC-000010.ps1)
 
-![Verify: Pass](./screenshots/WN11-AC-000010-pass.png)
 
 ---
 
@@ -126,7 +116,6 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Script:** *(shared — see [STIG-ID-WN11-AC-000005.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-AC-000005.ps1))*
 
-![Verify: Pass](./screenshots/WN11-AC-000015-pass.png)
 
 ---
 
@@ -141,11 +130,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** `NoLockScreenCamera = 1`
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-CC-000005-fail.png)
 
 **Script:** [STIG-ID-WN11-CC-000005.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-CC-000005.ps1)
 
-![Verify: Pass](./screenshots/WN11-CC-000005-pass.png)
 
 ---
 
@@ -158,11 +145,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** `LetAppsActivateWithVoiceAboveLock = 2`
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-CC-000197-fail.png)
 
 **Script:** [STIG-ID-WN11-CC-000197.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-CC-000197.ps1)
 
-![Verify: Pass](./screenshots/WN11-CC-000197-pass.png)
 
 ---
 
@@ -175,11 +160,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** `NoAutoplayfornonVolume = 1`
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-CC-000030-fail.png)
 
 **Script:** [STIG-ID-WN11-CC-000030.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-CC-000030.ps1)
 
-![Verify: Pass](./screenshots/WN11-CC-000030-pass.png)
 
 ---
 
@@ -193,11 +176,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** Guest account disabled (Enabled = False)
 **Result:** ✅ Pass
 
-![Verify: Before](./screenshots/WN11-SO-000005-before.png)
 
 **Script:** [STIG-ID-WN11-SO-000005.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-SO-000005.ps1)
 
-![Verify: Pass](./screenshots/WN11-SO-000005-pass.png)
 
 ---
 
@@ -210,11 +191,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** `ConsentPromptBehaviorAdmin = 1` (prompt for credentials on secure desktop)
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-SO-000070-fail.png)
 
 **Script:** [STIG-ID-WN11-SO-000070.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-SO-000070.ps1)
 
-![Verify: Pass](./screenshots/WN11-SO-000070-pass.png)
 
 ---
 
@@ -227,11 +206,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **After:** `EnablePlainTextPassword = 0`
 **Result:** ✅ Pass
 
-![Verify: Fail](./screenshots/WN11-SO-000075-fail.png)
 
 **Script:** [STIG-ID-WN11-SO-000075.ps1](./Window%2011%20STIG%20Scripts/STIG-ID-WN11-SO-000075.ps1)
 
-![Verify: Pass](./screenshots/WN11-SO-000075-pass.png)
 
 ---
 

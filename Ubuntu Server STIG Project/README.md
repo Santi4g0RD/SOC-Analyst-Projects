@@ -158,6 +158,63 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 ---
 
+## Vulnerability Scan — Tenable Nessus Agent (Post-Hardening)
+
+After applying all 10 STIG controls, a Tenable Nessus Agent scan was run against the hardened VM to validate the post-hardening state and identify any residual vulnerabilities not covered by STIG controls.
+
+**Scan date:** 2026-06-13
+**Scanner:** Tenable Nessus Agent 11.2.0 linked to Tenable.io
+**Method:** Agent-based — no inbound firewall rules required
+
+| Severity | Count |
+|---|---|
+| Critical | 1 |
+| High | 0 |
+| Medium | 1 |
+| Low | 0 |
+
+### Finding 1 — pyOpenSSL Buffer Overflow (Critical)
+
+**Plugin ID:** 318387
+**CVSSv3:** 9.8 — AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+**STIG Severity:** Category I
+**Installed version:** pyOpenSSL 23.2.0 — `/usr/lib/python3/dist-packages/`
+**Fixed version:** pyOpenSSL 26.0.0
+
+pyOpenSSL's `set_cookie_generate_callback` overflows an OpenSSL buffer when a cookie value exceeds 256 bytes. Network-exploitable with no authentication required — full confidentiality, integrity, and availability impact.
+
+**Remediation:** `sudo apt-get install --only-upgrade python3-openssl`
+
+**CVE:** [CVE-2026-27459](https://nvd.nist.gov/vuln/detail/CVE-2026-27459) | **IAVA:** 2026-A-0248
+
+---
+
+### Finding 2 — pyOpenSSL Security Bypass (Medium)
+
+**Plugin ID:** 318386
+**CVSSv3:** 5.3 — AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N
+**STIG Severity:** Category I
+**Installed version:** pyOpenSSL 23.2.0 — `/usr/lib/python3/dist-packages/`
+**Fixed version:** pyOpenSSL 26.0.0
+
+An unhandled exception in `set_tlsext_servername_callback` causes pyOpenSSL to accept a TLS connection instead of rejecting it — silently bypassing any security-sensitive callback logic (certificate validation, hostname enforcement).
+
+**Remediation:** `sudo apt-get install --only-upgrade python3-openssl`
+
+**CVE:** [CVE-2026-27448](https://nvd.nist.gov/vuln/detail/CVE-2026-27448) | **IAVA:** 2026-A-0248
+
+---
+
+### Scan Reports
+
+| Report | Description |
+|---|---|
+| [Executive Summary](./Nessus%20Scan%20abel-ubuntu-server/nessus-executive-summary-abel-ubuntu-server-2026-06-13.pdf) | Vulnerability counts by severity, OS summary, asset overview |
+| [Vulnerability Details by Plugin](./Nessus%20Scan%20abel-ubuntu-server/nessus-vuln-details-by-plugin-abel-ubuntu-server-2026-06-13.pdf) | Findings grouped by plugin with full CVSSv3 vectors and plugin output |
+| [Vulnerability Details by Asset](./Nessus%20Scan%20abel-ubuntu-server/nessus-vuln-details-by-asset-abel-ubuntu-server-2026-06-13.pdf) | Full finding list for `abel-ubuntu-server` sorted by CVSSv3 score |
+
+---
+
 ## Related Projects
 
 - [DISA STIG: Windows Server 2025 Hardening](../Win25%20Server%20STIG%20Project/)
