@@ -38,9 +38,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Value:** `MaxSize = 32768`
 
-**Before:** Registry key did not exist (path not found)
+**[Before](./screenshots/WN11-AU-000500-fail.png):** Registry key did not exist (path not found)
 
-**After:** `MaxSize = 32768`
+**[After](./screenshots/WN11-AU-000500-pass.png):** `MaxSize = 32768`
 
 **Result:** ✅ Pass
 
@@ -58,9 +58,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Value:** `MaxSize = 1024000`
 
-**Before:** Registry key did not exist (path not found)
+**[Before](./screenshots/WN11-AU-000505-fail.png):** Registry key did not exist (path not found)
 
-**After:** `MaxSize = 1024000`
+**[After](./screenshots/WN11-AU-000505-pass.png):** `MaxSize = 1024000`
 
 **Result:** ✅ Pass
 
@@ -78,9 +78,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Value:** `MaxSize = 32768`
 
-**Before:** Registry key did not exist (path not found)
+**[Before](./screenshots/WN11-AU-000510-fail.png):** Registry key did not exist (path not found)
 
-**After:** `MaxSize = 32768`
+**[After](./screenshots/WN11-AU-000510-pass.png):** `MaxSize = 32768`
 
 **Result:** ✅ Pass
 
@@ -98,9 +98,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Method:** secedit — `LockoutDuration = 15`
 
-**Before:** Lockout duration not configured (0 minutes)
+**[Before](./screenshots/WN11-AC-000005-fail.png):** Lockout duration not configured (0 minutes)
 
-**After:** Lockout duration: 15 minutes
+**[After](./screenshots/WN11-AC-000005-pass.png):** Lockout duration: 15 minutes
 
 **Result:** ✅ Pass
 
@@ -116,9 +116,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Method:** secedit — `LockoutBadCount = 3`
 
-**Before:** Lockout threshold not configured (0)
+**[Before](./screenshots/WN11-AC-000010-fail.png):** Lockout threshold not configured (0)
 
-**After:** Lockout threshold: 3 attempts
+**[After](./screenshots/WN11-AC-000010-pass.png):** Lockout threshold: 3 attempts
 
 **Result:** ✅ Pass
 
@@ -136,7 +136,7 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Before:** Reset counter not configured (0 minutes)
 
-**After:** Reset counter: 15 minutes
+**[After](./screenshots/WN11-AC-000015-pass.png):** Reset counter: 15 minutes
 
 **Result:** ✅ Pass
 **Notes:** Covered by the same secedit pass as WN11-AC-000005.
@@ -156,9 +156,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Value:** `NoLockScreenCamera = 1`
 
-**Before:** Registry key did not exist (path not found)
+**[Before](./screenshots/WN11-CC-000005-fail.png):** Registry key did not exist (path not found)
 
-**After:** `NoLockScreenCamera = 1`
+**[After](./screenshots/WN11-CC-000005-pass.png):** `NoLockScreenCamera = 1`
 
 **Result:** ✅ Pass
 
@@ -176,9 +176,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Value:** `LetAppsActivateWithVoiceAboveLock = 2` (Force Deny)
 
-**Before:** Registry key did not exist (path not found)
+**[Before](./screenshots/WN11-CC-000197-fail.png):** Registry key did not exist (path not found)
 
-**After:** `LetAppsActivateWithVoiceAboveLock = 2`
+**[After](./screenshots/WN11-CC-000197-pass.png):** `LetAppsActivateWithVoiceAboveLock = 2`
 
 **Result:** ✅ Pass
 
@@ -196,9 +196,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Value:** `NoAutoplayfornonVolume = 1`
 
-**Before:** Registry key did not exist (path not found)
+**[Before](./screenshots/WN11-CC-000030-fail.png):** Registry key did not exist (path not found)
 
-**After:** `NoAutoplayfornonVolume = 1`
+**[After](./screenshots/WN11-CC-000030-pass.png):** `NoAutoplayfornonVolume = 1`
 
 **Result:** ✅ Pass
 
@@ -216,9 +216,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Method:** `Disable-LocalUser -Name "Guest"`
 
-**Before:** Guest account enabled
+**[Before](./screenshots/WN11-SO-000005-before.png):** Guest account enabled
 
-**After:** Guest account disabled (Enabled = False)
+**[After](./screenshots/WN11-SO-000005-pass.png):** Guest account disabled (Enabled = False)
 
 **Result:** ✅ Pass
 
@@ -236,9 +236,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Value:** `ConsentPromptBehaviorAdmin = 1`
 
-**Before:** `ConsentPromptBehaviorAdmin = 5` (prompt for consent, not credentials)
+**[Before](./screenshots/WN11-SO-000070-fail.png):** `ConsentPromptBehaviorAdmin = 5` (prompt for consent, not credentials)
 
-**After:** `ConsentPromptBehaviorAdmin = 1` (prompt for credentials on secure desktop)
+**[After](./screenshots/WN11-SO-000070-pass.png):** `ConsentPromptBehaviorAdmin = 1` (prompt for credentials on secure desktop)
 
 **Result:** ✅ Pass
 
@@ -256,9 +256,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 **Value:** `EnablePlainTextPassword = 0`
 
-**Before:** `EnablePlainTextPassword` not configured (value not present)
+**[Before](./screenshots/WN11-SO-000075-fail.png):** `EnablePlainTextPassword` not configured (value not present)
 
-**After:** `EnablePlainTextPassword = 0`
+**[After](./screenshots/WN11-SO-000075-pass.png):** `EnablePlainTextPassword = 0`
 
 **Result:** ✅ Pass
 
@@ -270,7 +270,7 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 ## Screenshots
 
-Before and after verification screenshots for all 12 controls are available in the [`screenshots/`](./screenshots/) folder.
+Each **Before** and **After** field in the sections above links directly to its verification screenshot. All screenshots are also browsable in the [`screenshots/`](./screenshots/) folder.
 
 ---
 

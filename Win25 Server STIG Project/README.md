@@ -64,9 +64,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `MaxSize = 1024000`
 
-**Before:** Registry key did not exist (path not found)
+**[Before](./screenshots/WN25-AU-000500-before.png):** Registry key did not exist (path not found)
 
-**After:** `MaxSize = 1024000`
+**[After](./screenshots/WN25-AU-000500-after.png):** `MaxSize = 1024000`
 
 **Result:** ✅ Pass
 
@@ -83,9 +83,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `MaxSize = 32768`
 
-**Before:** Registry key did not exist (path not found)
+**[Before](./screenshots/WN25-AU-000505-before.png):** Registry key did not exist (path not found)
 
-**After:** `MaxSize = 32768`
+**[After](./screenshots/WN25-AU-000505-after.png):** `MaxSize = 32768`
 
 **Result:** ✅ Pass
 
@@ -102,9 +102,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `MaxSize = 32768`
 
-**Before:** Registry key did not exist (path not found)
+**[Before](./screenshots/WN25-AU-000510-before.png):** Registry key did not exist (path not found)
 
-**After:** `MaxSize = 32768`
+**[After](./screenshots/WN25-AU-000510-after.png):** `MaxSize = 32768`
 
 **Result:** ✅ Pass
 
@@ -123,9 +123,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Standalone:** secedit — `LockoutDuration = 15`
 **DC:** `Set-ADDefaultDomainPasswordPolicy -LockoutDuration "00:15:00"`
 
-**Before:** Local: 10 min / Domain: 10 min — below STIG minimum
+**[Before](./screenshots/WN25-AC-000005-before.png):** Local: 10 min / Domain: 10 min — below STIG minimum
 
-**After:** Local: 15 min / Domain: 15 min
+**[After](./screenshots/WN25-AC-000005-after.png):** Local: 15 min / Domain: 15 min
 
 **Result:** ✅ Pass
 
@@ -140,9 +140,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Standalone:** secedit — `LockoutBadCount = 3`
 **DC:** `Set-ADDefaultDomainPasswordPolicy -LockoutThreshold 3`
 
-**Before:** Local: 0 (disabled) / Domain: 0 — no lockout configured
+**[Before](./screenshots/WN25-AC-000010-before.png):** Local: 0 (disabled) / Domain: 0 — no lockout configured
 
-**After:** Local: 3 / Domain: 3
+**[After](./screenshots/WN25-AC-000010-after.png):** Local: 3 / Domain: 3
 
 **Result:** ✅ Pass
 
@@ -157,9 +157,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Standalone:** secedit — `ResetLockoutCount = 15`
 **DC:** `Set-ADDefaultDomainPasswordPolicy -LockoutObservationWindow "00:15:00"`
 
-**Before:** Local: 0 min / Domain: 0 min — not configured
+**[Before](./screenshots/WN25-AC-000015-before.png):** Local: 0 min / Domain: 0 min — not configured
 
-**After:** Local: 15 min / Domain: 15 min
+**[After](./screenshots/WN25-AC-000015-after.png):** Local: 15 min / Domain: 15 min
 
 **Result:** ✅ Pass
 
@@ -178,9 +178,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `LmCompatibilityLevel = 5`
 
-**Before:** `LmCompatibilityLevel` not set (default)
+**[Before](./screenshots/WN25-SO-000001-before.png):** `LmCompatibilityLevel` not set (default)
 
-**After:** `LmCompatibilityLevel = 5`
+**[After](./screenshots/WN25-SO-000001-after.png):** `LmCompatibilityLevel = 5`
 
 **Result:** ✅ Pass
 
@@ -195,9 +195,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** `Disable-LocalUser -Name "Guest"`
 
-**Before:** Guest account already disabled
+**[Before](./screenshots/WN25-SO-000005-before.png):** Guest account already disabled
 
-**After:** Guest account confirmed disabled (`Enabled = False`)
+**[After](./screenshots/WN25-SO-000005-after.png):** Guest account confirmed disabled (`Enabled = False`)
 
 **Result:** ✅ Pass
 
@@ -214,9 +214,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `NoDriveTypeAutoRun = 255`
 
-**Before:** `NoDriveTypeAutoRun` not set
+**[Before](./screenshots/WN25-SO-000010-before.png):** `NoDriveTypeAutoRun` not set
 
-**After:** `NoDriveTypeAutoRun = 255`
+**[After](./screenshots/WN25-SO-000010-after.png):** `NoDriveTypeAutoRun = 255`
 
 **Result:** ✅ Pass
 
@@ -233,9 +233,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `RestrictAnonymousSAM = 1`
 
-**Before:** `RestrictAnonymousSAM` not set
+**[Before](./screenshots/WN25-SO-000015-before.png):** `RestrictAnonymousSAM` not set
 
-**After:** `RestrictAnonymousSAM = 1`
+**[After](./screenshots/WN25-SO-000015-after.png):** `RestrictAnonymousSAM = 1`
 
 **Result:** ✅ Pass
 
@@ -252,9 +252,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `RestrictAnonymous = 1`
 
-**Before:** `RestrictAnonymous` not set
+**[Before](./screenshots/WN25-SO-000020-before.png):** `RestrictAnonymous` not set
 
-**After:** `RestrictAnonymous = 1`
+**[After](./screenshots/WN25-SO-000020-after.png):** `RestrictAnonymous = 1`
 
 **Result:** ✅ Pass
 
@@ -271,9 +271,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `NtlmMinServerSec = 537395200`
 
-**Before:** `NtlmMinServerSec` not set
+**[Before](./screenshots/WN25-SO-000025-before.png):** `NtlmMinServerSec` not set
 
-**After:** `NtlmMinServerSec = 537395200`
+**[After](./screenshots/WN25-SO-000025-after.png):** `NtlmMinServerSec = 537395200`
 
 **Result:** ✅ Pass
 
@@ -290,9 +290,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `CachedLogonsCount = 4`
 
-**Before:** `CachedLogonsCount` not set (default)
+**[Before](./screenshots/WN25-SO-000030-before.png):** `CachedLogonsCount` not set (default)
 
-**After:** `CachedLogonsCount = 4`
+**[After](./screenshots/WN25-SO-000030-after.png):** `CachedLogonsCount = 4`
 
 **Result:** ✅ Pass
 
@@ -309,9 +309,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `UseLogonCredential = 0`
 
-**Before:** `UseLogonCredential` not set
+**[Before](./screenshots/WN25-SO-000035-before.png):** `UseLogonCredential` not set
 
-**After:** `UseLogonCredential = 0`
+**[After](./screenshots/WN25-SO-000035-after.png):** `UseLogonCredential = 0`
 
 **Result:** ✅ Pass
 
@@ -328,9 +328,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `DontDisplayLastUserName = 1`
 
-**Before:** `DontDisplayLastUserName = 0` — last username displayed at logon (non-compliant)
+**[Before](./screenshots/WN25-SO-000040-before.png):** `DontDisplayLastUserName = 0` — last username displayed at logon (non-compliant)
 
-**After:** `DontDisplayLastUserName = 1` — last username no longer displayed
+**[After](./screenshots/WN25-SO-000040-after.png):** `DontDisplayLastUserName = 1` — last username no longer displayed
 
 **Result:** ✅ Pass
 
@@ -347,9 +347,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `ConsentPromptBehaviorAdmin = 1`
 
-**Before:** `ConsentPromptBehaviorAdmin = 5` (prompt for consent, not credentials)
+**[Before](./screenshots/WN25-SO-000070-before.png):** `ConsentPromptBehaviorAdmin = 5` (prompt for consent, not credentials)
 
-**After:** `ConsentPromptBehaviorAdmin = 1` (prompt for credentials on secure desktop)
+**[After](./screenshots/WN25-SO-000070-after.png):** `ConsentPromptBehaviorAdmin = 1` (prompt for credentials on secure desktop)
 
 **Result:** ✅ Pass
 
@@ -366,9 +366,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** secedit — `SeTcbPrivilege = (blank)`
 
-**Before:** `SeTcbPrivilege` not found in secedit export — no explicit assignment
+**[Before](./screenshots/WN25-UR-000001-before.png):** `SeTcbPrivilege` not found in secedit export — no explicit assignment
 
-**After:** `SeTcbPrivilege` cleared — no accounts assigned
+**[After](./screenshots/WN25-UR-000001-after.png):** `SeTcbPrivilege` cleared — no accounts assigned
 
 **Result:** ✅ Pass
 
@@ -383,9 +383,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** secedit — `SeDebugPrivilege = *S-1-5-32-544`
 
-**Before:** `SeDebugPrivilege = *S-1-5-32-544` (already Administrators only)
+**[Before](./screenshots/WN25-UR-000005-before.png):** `SeDebugPrivilege = *S-1-5-32-544` (already Administrators only)
 
-**After:** `SeDebugPrivilege = *S-1-5-32-544` — confirmed Administrators only
+**[After](./screenshots/WN25-UR-000005-after.png):** `SeDebugPrivilege = *S-1-5-32-544` — confirmed Administrators only
 
 **Result:** ✅ Pass
 
@@ -400,9 +400,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** secedit — `SeDenyBatchLogonRight` includes `*S-1-5-32-546` (Guests)
 
-**Before:** `SeDenyBatchLogonRight` not found in secedit export — not explicitly set
+**[Before](./screenshots/WN25-UR-000015-before.png):** `SeDenyBatchLogonRight` not found in secedit export — not explicitly set
 
-**After:** Script confirmed — Guests denied log on as a batch job
+**[After](./screenshots/WN25-UR-000015-after.png):** Script confirmed — Guests denied log on as a batch job
 
 **Result:** ✅ Pass
 
@@ -417,9 +417,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** secedit — `SeDenyServiceLogonRight` includes `*S-1-5-32-546` (Guests)
 
-**Before:** `SeDenyServiceLogonRight` not found in secedit export — not explicitly set
+**[Before](./screenshots/WN25-UR-000020-before.png):** `SeDenyServiceLogonRight` not found in secedit export — not explicitly set
 
-**After:** Script confirmed — Guests denied log on as a service
+**[After](./screenshots/WN25-UR-000020-after.png):** Script confirmed — Guests denied log on as a service
 
 **Result:** ✅ Pass
 
@@ -434,9 +434,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** secedit — `SeSecurityPrivilege = *S-1-5-32-544`
 
-**Before:** `SeSecurityPrivilege = *S-1-5-32-544` (already Administrators only)
+**[Before](./screenshots/WN25-UR-000025-before.png):** `SeSecurityPrivilege = *S-1-5-32-544` (already Administrators only)
 
-**After:** `SeSecurityPrivilege` restricted to Administrators only — confirmed
+**[After](./screenshots/WN25-UR-000025-after.png):** `SeSecurityPrivilege` restricted to Administrators only — confirmed
 
 **Result:** ✅ Pass
 
@@ -451,9 +451,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** secedit — `SeCreateTokenPrivilege = (blank)`
 
-**Before:** `SeCreateTokenPrivilege` not found in secedit export — not explicitly set
+**[Before](./screenshots/WN25-UR-000030-before.png):** `SeCreateTokenPrivilege` not found in secedit export — not explicitly set
 
-**After:** `SeCreateTokenPrivilege` cleared — no accounts assigned
+**[After](./screenshots/WN25-UR-000030-after.png):** `SeCreateTokenPrivilege` cleared — no accounts assigned
 
 **Result:** ✅ Pass
 
@@ -468,9 +468,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** secedit — `SeTakeOwnershipPrivilege = *S-1-5-32-544`
 
-**Before:** `SeTakeOwnershipPrivilege = *S-1-5-32-544` (already Administrators only)
+**[Before](./screenshots/WN25-UR-000035-before.png):** `SeTakeOwnershipPrivilege = *S-1-5-32-544` (already Administrators only)
 
-**After:** `SeTakeOwnershipPrivilege` restricted to Administrators only — confirmed
+**[After](./screenshots/WN25-UR-000035-after.png):** `SeTakeOwnershipPrivilege` restricted to Administrators only — confirmed
 
 **Result:** ✅ Pass
 
@@ -489,9 +489,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `UserAuthentication = 1`
 
-**Before:** `UserAuthentication` not configured — NLA not enforced
+**[Before](./screenshots/WN25-CC-000035-before.png):** `UserAuthentication` not configured — NLA not enforced
 
-**After:** `UserAuthentication = 1` — NLA enforced
+**[After](./screenshots/WN25-CC-000035-after.png):** `UserAuthentication = 1` — NLA enforced
 
 **Result:** ✅ Pass
 
@@ -508,9 +508,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **CVEs:** CVE-2017-0144 (EternalBlue / WannaCry)
 
-**Before:** `EnableSMB1Protocol = False` (already disabled on Server 2025)
+**[Before](./screenshots/WN25-CC-000040-before.png):** `EnableSMB1Protocol = False` (already disabled on Server 2025)
 
-**After:** `EnableSMB1Protocol = False` — confirmed disabled
+**[After](./screenshots/WN25-CC-000040-after.png):** `EnableSMB1Protocol = False` — confirmed disabled
 
 **Result:** ✅ Pass
 
@@ -529,7 +529,7 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Before:** No before state captured
 
-**After:** `Domain Enabled = True`
+**[After](./screenshots/WN25-FW-000001-after.png):** `Domain Enabled = True`
 
 **Result:** ✅ Pass
 
@@ -543,9 +543,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** `Set-NetFirewallProfile -Profile Private -Enabled True`
 
-**Before:** `Private Enabled = True` (already enabled)
+**[Before](./screenshots/WN25-FW-000002-before.png):** `Private Enabled = True` (already enabled)
 
-**After:** `Private Enabled = True` — confirmed
+**[After](./screenshots/WN25-FW-000002-after.png):** `Private Enabled = True` — confirmed
 
 **Result:** ✅ Pass
 
@@ -560,9 +560,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** `Set-NetFirewallProfile -Profile Public -Enabled True`
 
-**Before:** `Public Enabled = True` (already enabled)
+**[Before](./screenshots/WN25-FW-000003-before.png):** `Public Enabled = True` (already enabled)
 
-**After:** `Public Enabled = True` — confirmed
+**[After](./screenshots/WN25-FW-000003-after.png):** `Public Enabled = True` — confirmed
 
 **Result:** ✅ Pass
 
@@ -577,9 +577,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** `Set-NetFirewallProfile -Profile Domain -DefaultInboundAction Block`
 
-**Before:** `DefaultInboundAction = NotConfigured`
+**[Before](./screenshots/WN25-FW-000010-before.png):** `DefaultInboundAction = NotConfigured`
 
-**After:** `DefaultInboundAction = Block`
+**[After](./screenshots/WN25-FW-000010-after.png):** `DefaultInboundAction = Block`
 
 **Result:** ✅ Pass
 
@@ -594,9 +594,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** `Set-NetFirewallProfile -Profile Public -DefaultInboundAction Block`
 
-**Before:** `DefaultInboundAction = NotConfigured`
+**[Before](./screenshots/WN25-FW-000015-before.png):** `DefaultInboundAction = NotConfigured`
 
-**After:** `DefaultInboundAction = Block`
+**[After](./screenshots/WN25-FW-000015-after.png):** `DefaultInboundAction = Block`
 
 **Result:** ✅ Pass
 
@@ -615,9 +615,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `DisableIPSourceRouting = 2`
 
-**Before:** `DisableIPSourceRouting` not set — registry key not present
+**[Before](./screenshots/WN25-NE-000001-before.png):** `DisableIPSourceRouting` not set — registry key not present
 
-**After:** `DisableIPSourceRouting = 2` — highest protection level
+**[After](./screenshots/WN25-NE-000001-after.png):** `DisableIPSourceRouting = 2` — highest protection level
 
 **Result:** ✅ Pass
 
@@ -634,9 +634,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Value:** `EnableICMPRedirect = 0`
 
-**Before:** `EnableICMPRedirect` not set — registry key not present
+**[Before](./screenshots/WN25-NE-000005-before.png):** `EnableICMPRedirect` not set — registry key not present
 
-**After:** `EnableICMPRedirect = 0` — ICMP redirects disabled
+**[After](./screenshots/WN25-NE-000005-after.png):** `EnableICMPRedirect = 0` — ICMP redirects disabled
 
 **Result:** ✅ Pass
 
@@ -651,9 +651,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 **Method:** WMI — `SetTcpipNetbios(2)` on all IP-enabled adapters
 
-**Before:** `TcpipNetbiosOptions = 0` (using DHCP setting — not explicitly disabled)
+**[Before](./screenshots/WN25-NE-000010-before.png):** `TcpipNetbiosOptions = 0` (using DHCP setting — not explicitly disabled)
 
-**After:** `TcpipNetbiosOptions = 2` — NetBIOS disabled on all adapters
+**[After](./screenshots/WN25-NE-000010-after.png):** `TcpipNetbiosOptions = 2` — NetBIOS disabled on all adapters
 
 **Result:** ✅ Pass
 
@@ -665,7 +665,7 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 ## Screenshots
 
-Before and after verification screenshots for all 36 controls are available in the [`screenshots/`](./screenshots/) folder.
+Each **Before** and **After** field in the sections above links directly to its verification screenshot. All screenshots are also browsable in the [`screenshots/`](./screenshots/) folder.
 
 ---
 
