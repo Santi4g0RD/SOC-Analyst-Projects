@@ -62,7 +62,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Security`
 **Value:** `MaxSize = 1024000`
 **Before:** Registry key did not exist (path not found)
+
 **After:** `MaxSize = 1024000`
+
 **Result:** ✅ Pass
 
 
@@ -76,7 +78,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Application`
 **Value:** `MaxSize = 32768`
 **Before:** Registry key did not exist (path not found)
+
 **After:** `MaxSize = 32768`
+
 **Result:** ✅ Pass
 
 
@@ -90,7 +94,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\System`
 **Value:** `MaxSize = 32768`
 **Before:** Registry key did not exist (path not found)
+
 **After:** `MaxSize = 32768`
+
 **Result:** ✅ Pass
 
 
@@ -108,7 +114,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Standalone:** secedit — `LockoutDuration = 15`
 **DC:** `Set-ADDefaultDomainPasswordPolicy -LockoutDuration "00:15:00"`
 **Before:** Local: 10 min / Domain: 10 min — below STIG minimum
+
 **After:** Local: 15 min / Domain: 15 min
+
 **Result:** ✅ Pass
 
 
@@ -122,7 +130,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Standalone:** secedit — `LockoutBadCount = 3`
 **DC:** `Set-ADDefaultDomainPasswordPolicy -LockoutThreshold 3`
 **Before:** Local: 0 (disabled) / Domain: 0 — no lockout configured
+
 **After:** Local: 3 / Domain: 3
+
 **Result:** ✅ Pass
 
 
@@ -136,7 +146,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Standalone:** secedit — `ResetLockoutCount = 15`
 **DC:** `Set-ADDefaultDomainPasswordPolicy -LockoutObservationWindow "00:15:00"`
 **Before:** Local: 0 min / Domain: 0 min — not configured
+
 **After:** Local: 15 min / Domain: 15 min
+
 **Result:** ✅ Pass
 
 
@@ -152,7 +164,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa`
 **Value:** `LmCompatibilityLevel = 5`
 **Before:** `LmCompatibilityLevel` not set (default)
+
 **After:** `LmCompatibilityLevel = 5`
+
 **Result:** ✅ Pass
 
 
@@ -165,7 +179,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** The built-in Guest account must be disabled.
 **Method:** `Disable-LocalUser -Name "Guest"`
 **Before:** Guest account already disabled
+
 **After:** Guest account confirmed disabled (`Enabled = False`)
+
 **Result:** ✅ Pass
 
 
@@ -179,7 +195,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer`
 **Value:** `NoDriveTypeAutoRun = 255`
 **Before:** `NoDriveTypeAutoRun` not set
+
 **After:** `NoDriveTypeAutoRun = 255`
+
 **Result:** ✅ Pass
 
 
@@ -193,7 +211,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa`
 **Value:** `RestrictAnonymousSAM = 1`
 **Before:** `RestrictAnonymousSAM` not set
+
 **After:** `RestrictAnonymousSAM = 1`
+
 **Result:** ✅ Pass
 
 
@@ -207,7 +227,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa`
 **Value:** `RestrictAnonymous = 1`
 **Before:** `RestrictAnonymous` not set
+
 **After:** `RestrictAnonymous = 1`
+
 **Result:** ✅ Pass
 
 
@@ -221,7 +243,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0`
 **Value:** `NtlmMinServerSec = 537395200`
 **Before:** `NtlmMinServerSec` not set
+
 **After:** `NtlmMinServerSec = 537395200`
+
 **Result:** ✅ Pass
 
 
@@ -235,7 +259,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon`
 **Value:** `CachedLogonsCount = 4`
 **Before:** `CachedLogonsCount` not set (default)
+
 **After:** `CachedLogonsCount = 4`
+
 **Result:** ✅ Pass
 
 
@@ -249,7 +275,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest`
 **Value:** `UseLogonCredential = 0`
 **Before:** `UseLogonCredential` not set
+
 **After:** `UseLogonCredential = 0`
+
 **Result:** ✅ Pass
 
 
@@ -263,7 +291,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System`
 **Value:** `DontDisplayLastUserName = 1`
 **Before:** `DontDisplayLastUserName = 0` — last username displayed at logon (non-compliant)
+
 **After:** `DontDisplayLastUserName = 1` — last username no longer displayed
+
 **Result:** ✅ Pass
 
 
@@ -277,7 +307,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System`
 **Value:** `ConsentPromptBehaviorAdmin = 1`
 **Before:** `ConsentPromptBehaviorAdmin = 5` (prompt for consent, not credentials)
+
 **After:** `ConsentPromptBehaviorAdmin = 1` (prompt for credentials on secure desktop)
+
 **Result:** ✅ Pass
 
 
@@ -292,7 +324,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** The "Act as part of the operating system" right must not be assigned to any accounts.
 **Method:** secedit — `SeTcbPrivilege = (blank)`
 **Before:** `SeTcbPrivilege` not found in secedit export — no explicit assignment
+
 **After:** `SeTcbPrivilege` cleared — no accounts assigned
+
 **Result:** ✅ Pass
 
 
@@ -305,7 +339,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** The "Debug programs" right must only be assigned to Administrators.
 **Method:** secedit — `SeDebugPrivilege = *S-1-5-32-544`
 **Before:** `SeDebugPrivilege = *S-1-5-32-544` (already Administrators only)
+
 **After:** `SeDebugPrivilege = *S-1-5-32-544` — confirmed Administrators only
+
 **Result:** ✅ Pass
 
 
@@ -318,7 +354,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** Guest account must be denied the right to log on as a batch job.
 **Method:** secedit — `SeDenyBatchLogonRight` includes `*S-1-5-32-546` (Guests)
 **Before:** `SeDenyBatchLogonRight` not found in secedit export — not explicitly set
+
 **After:** Script confirmed — Guests denied log on as a batch job
+
 **Result:** ✅ Pass
 
 
@@ -331,7 +369,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** Guest account must be denied the right to log on as a service.
 **Method:** secedit — `SeDenyServiceLogonRight` includes `*S-1-5-32-546` (Guests)
 **Before:** `SeDenyServiceLogonRight` not found in secedit export — not explicitly set
+
 **After:** Script confirmed — Guests denied log on as a service
+
 **Result:** ✅ Pass
 
 
@@ -344,7 +384,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** The "Manage auditing and security log" right must only be assigned to Administrators.
 **Method:** secedit — `SeSecurityPrivilege = *S-1-5-32-544`
 **Before:** `SeSecurityPrivilege = *S-1-5-32-544` (already Administrators only)
+
 **After:** `SeSecurityPrivilege` restricted to Administrators only — confirmed
+
 **Result:** ✅ Pass
 
 
@@ -357,7 +399,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** The "Create a token object" right must not be assigned to any accounts.
 **Method:** secedit — `SeCreateTokenPrivilege = (blank)`
 **Before:** `SeCreateTokenPrivilege` not found in secedit export — not explicitly set
+
 **After:** `SeCreateTokenPrivilege` cleared — no accounts assigned
+
 **Result:** ✅ Pass
 
 
@@ -370,7 +414,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** The "Take ownership of files or other objects" right must only be assigned to Administrators.
 **Method:** secedit — `SeTakeOwnershipPrivilege = *S-1-5-32-544`
 **Before:** `SeTakeOwnershipPrivilege = *S-1-5-32-544` (already Administrators only)
+
 **After:** `SeTakeOwnershipPrivilege` restricted to Administrators only — confirmed
+
 **Result:** ✅ Pass
 
 
@@ -386,7 +432,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services`
 **Value:** `UserAuthentication = 1`
 **Before:** `UserAuthentication` not configured — NLA not enforced
+
 **After:** `UserAuthentication = 1` — NLA enforced
+
 **Result:** ✅ Pass
 
 
@@ -400,7 +448,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Method:** `Set-SmbServerConfiguration -EnableSMB1Protocol $false`
 **CVEs:** CVE-2017-0144 (EternalBlue / WannaCry)
 **Before:** `EnableSMB1Protocol = False` (already disabled on Server 2025)
+
 **After:** `EnableSMB1Protocol = False` — confirmed disabled
+
 **Result:** ✅ Pass
 
 
@@ -415,7 +465,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** Windows Firewall must be enabled for the Domain profile.
 **Method:** `Set-NetFirewallProfile -Profile Domain -Enabled True`
 **Before:** No before state captured
+
 **After:** `Domain Enabled = True`
+
 **Result:** ✅ Pass
 
 **Script:** [STIG-ID-WN25-FW-000001.ps1](./Win25%20Server%20STIG%20Scripts/STIG-ID-WN25-FW-000001.ps1)
@@ -427,7 +479,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** Windows Firewall must be enabled for the Private profile.
 **Method:** `Set-NetFirewallProfile -Profile Private -Enabled True`
 **Before:** `Private Enabled = True` (already enabled)
+
 **After:** `Private Enabled = True` — confirmed
+
 **Result:** ✅ Pass
 
 
@@ -440,7 +494,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** Windows Firewall must be enabled for the Public profile.
 **Method:** `Set-NetFirewallProfile -Profile Public -Enabled True`
 **Before:** `Public Enabled = True` (already enabled)
+
 **After:** `Public Enabled = True` — confirmed
+
 **Result:** ✅ Pass
 
 
@@ -453,7 +509,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** Inbound connections not matching a rule must be blocked on the Domain profile.
 **Method:** `Set-NetFirewallProfile -Profile Domain -DefaultInboundAction Block`
 **Before:** `DefaultInboundAction = NotConfigured`
+
 **After:** `DefaultInboundAction = Block`
+
 **Result:** ✅ Pass
 
 
@@ -466,7 +524,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** Inbound connections not matching a rule must be blocked on the Public profile.
 **Method:** `Set-NetFirewallProfile -Profile Public -DefaultInboundAction Block`
 **Before:** `DefaultInboundAction = NotConfigured`
+
 **After:** `DefaultInboundAction = Block`
+
 **Result:** ✅ Pass
 
 
@@ -482,7 +542,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters`
 **Value:** `DisableIPSourceRouting = 2`
 **Before:** `DisableIPSourceRouting` not set — registry key not present
+
 **After:** `DisableIPSourceRouting = 2` — highest protection level
+
 **Result:** ✅ Pass
 
 
@@ -496,7 +558,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Registry:** `HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters`
 **Value:** `EnableICMPRedirect = 0`
 **Before:** `EnableICMPRedirect` not set — registry key not present
+
 **After:** `EnableICMPRedirect = 0` — ICMP redirects disabled
+
 **Result:** ✅ Pass
 
 
@@ -509,7 +573,9 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 **Rule:** NetBIOS over TCP/IP must be disabled on all network adapters where not required.
 **Method:** WMI — `SetTcpipNetbios(2)` on all IP-enabled adapters
 **Before:** `TcpipNetbiosOptions = 0` (using DHCP setting — not explicitly disabled)
+
 **After:** `TcpipNetbiosOptions = 2` — NetBIOS disabled on all adapters
+
 **Result:** ✅ Pass
 
 

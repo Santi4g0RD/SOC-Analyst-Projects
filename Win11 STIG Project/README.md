@@ -36,7 +36,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Application`
 **Value:** `MaxSize = 32768`
 **Before:** Registry key did not exist (path not found)
+
 **After:** `MaxSize = 32768`
+
 **Result:** ✅ Pass
 
 
@@ -51,7 +53,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Security`
 **Value:** `MaxSize = 1024000`
 **Before:** Registry key did not exist (path not found)
+
 **After:** `MaxSize = 1024000`
+
 **Result:** ✅ Pass
 
 
@@ -66,7 +70,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\System`
 **Value:** `MaxSize = 32768`
 **Before:** Registry key did not exist (path not found)
+
 **After:** `MaxSize = 32768`
+
 **Result:** ✅ Pass
 
 
@@ -82,7 +88,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Rule:** Account lockout duration must be 15 minutes or greater.
 **Method:** secedit — `LockoutDuration = 15`
 **Before:** Lockout duration not configured (0 minutes)
+
 **After:** Lockout duration: 15 minutes
+
 **Result:** ✅ Pass
 
 
@@ -96,7 +104,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Rule:** Account lockout threshold must be 3 or fewer invalid logon attempts.
 **Method:** secedit — `LockoutBadCount = 3`
 **Before:** Lockout threshold not configured (0)
+
 **After:** Lockout threshold: 3 attempts
+
 **Result:** ✅ Pass
 
 
@@ -110,7 +120,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Rule:** Reset account lockout counter must be 15 minutes or greater.
 **Method:** secedit — `ResetLockoutCount = 15`
 **Before:** Reset counter not configured (0 minutes)
+
 **After:** Reset counter: 15 minutes
+
 **Result:** ✅ Pass
 **Notes:** Covered by the same secedit pass as WN11-AC-000005.
 
@@ -127,7 +139,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization`
 **Value:** `NoLockScreenCamera = 1`
 **Before:** Registry key did not exist (path not found)
+
 **After:** `NoLockScreenCamera = 1`
+
 **Result:** ✅ Pass
 
 
@@ -142,7 +156,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy`
 **Value:** `LetAppsActivateWithVoiceAboveLock = 2` (Force Deny)
 **Before:** Registry key did not exist (path not found)
+
 **After:** `LetAppsActivateWithVoiceAboveLock = 2`
+
 **Result:** ✅ Pass
 
 
@@ -157,7 +173,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Registry:** `HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer`
 **Value:** `NoAutoplayfornonVolume = 1`
 **Before:** Registry key did not exist (path not found)
+
 **After:** `NoAutoplayfornonVolume = 1`
+
 **Result:** ✅ Pass
 
 
@@ -173,7 +191,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Rule:** The built-in Guest account must be disabled.
 **Method:** `Disable-LocalUser -Name "Guest"`
 **Before:** Guest account enabled
+
 **After:** Guest account disabled (Enabled = False)
+
 **Result:** ✅ Pass
 
 
@@ -188,7 +208,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Registry:** `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System`
 **Value:** `ConsentPromptBehaviorAdmin = 1`
 **Before:** `ConsentPromptBehaviorAdmin = 5` (prompt for consent, not credentials)
+
 **After:** `ConsentPromptBehaviorAdmin = 1` (prompt for credentials on secure desktop)
+
 **Result:** ✅ Pass
 
 
@@ -203,7 +225,9 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 **Registry:** `HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters`
 **Value:** `EnablePlainTextPassword = 0`
 **Before:** `EnablePlainTextPassword` not configured (value not present)
+
 **After:** `EnablePlainTextPassword = 0`
+
 **Result:** ✅ Pass
 
 
