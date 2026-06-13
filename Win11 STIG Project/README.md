@@ -268,6 +268,12 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 ---
 
+## Screenshots
+
+Before and after verification screenshots for all 12 controls are available in the [`screenshots/`](./screenshots/) folder.
+
+---
+
 ## Testing Environment
 
 | Detail | Value |

@@ -662,6 +662,13 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 
 ---
+
+## Screenshots
+
+Before and after verification screenshots for all 36 controls are available in the [`screenshots/`](./screenshots/) folder.
+
+---
+
 ## Testing Environment
 
 | Detail | Value |
