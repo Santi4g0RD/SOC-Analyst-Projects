@@ -33,7 +33,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-010013 — Enable auditd
 
 **Rule:** The `auditd` service must be installed, enabled at boot, and actively running.
+
 **Config:** `apt-get install -y auditd audispd-plugins && systemctl enable --now auditd`
+
 **Before:** `auditd` was not installed — `systemctl is-enabled` and `is-active` both returned unit-not-found errors.
 
 **After:** `auditd` installed, `enabled` at boot, and `active` (running).
@@ -47,7 +49,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-010014 — Audit Log File Size
 
 **Rule:** The audit log max file size must be at least 10 MB.
+
 **Config:** `/etc/audit/auditd.conf` — `max_log_file = 10`
+
 **Before:** `max_log_file = 8` (Ubuntu default — below the STIG minimum).
 
 **After:** `max_log_file = 10`
@@ -63,7 +67,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-213010 — Automatic Security Updates
 
 **Rule:** The system must be configured to automatically install security patches.
+
 **Config:** `apt-get install -y unattended-upgrades` + `/etc/apt/apt.conf.d/20auto-upgrades`
+
 **Before:** `unattended-upgrades` was not enabled — security patches required manual intervention.
 
 **After:** Service enabled at boot; `20auto-upgrades` configured with `Update-Package-Lists "1"` and `Unattended-Upgrade "1"`.
@@ -77,7 +83,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-215010 — Remove Telnet
 
 **Rule:** The telnet package must not be installed — telnet transmits credentials in plaintext.
+
 **Config:** `apt-get remove -y telnet telnetd inetutils-telnet`
+
 **Before:** No telnet package installed on this fresh VM — clean baseline confirmed.
 
 **After:** `dpkg -l | grep telnet` returns no output; `apt purge` ensures any residual config is also removed.
@@ -91,7 +99,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-251010 — Disable USB Storage
 
 **Rule:** USB mass storage must be disabled to prevent unauthorized data transfer or malicious device insertion.
+
 **Config:** `/etc/modprobe.d/usb-storage.conf` — `install usb-storage /bin/false`
+
 **Before:** `/etc/modprobe.d/usb-storage.conf` did not exist — the `usb-storage` kernel module could load freely.
 
 **After:** Module blacklisted via modprobe config — any attempt to load `usb-storage` is redirected to `/bin/false`.
@@ -107,7 +117,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-232010 — Minimum Password Length
 
 **Rule:** Passwords must be a minimum of 15 characters.
+
 **Config:** `/etc/security/pwquality.conf` — `minlen = 15`
+
 **Before:** `libpam-pwquality` was not installed and `/etc/security/pwquality.conf` did not exist — no password complexity enforcement in place.
 
 **After:** Package installed; `minlen = 15` written to `pwquality.conf` — PAM enforces minimum length on all password changes.
@@ -121,7 +133,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-654010 — Account Lockout Policy
 
 **Rule:** Accounts must lock after 3 consecutive failed login attempts and remain locked for at least 15 minutes.
+
 **Config:** `/etc/security/faillock.conf` — `deny = 3`, `unlock_time = 900`
+
 **Before:** `deny` and `unlock_time` were commented out — no account lockout policy active, enabling unlimited brute-force attempts.
 
 **After:** `deny = 3` and `unlock_time = 900` enforced — accounts lock after 3 failures and auto-unlock after 15 minutes.
@@ -137,7 +151,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-255010 — SSH Session Timeout
 
 **Rule:** SSH must terminate idle sessions after no more than 10 minutes of inactivity.
+
 **Config:** `/etc/ssh/sshd_config` — `ClientAliveInterval 600`, `ClientAliveCountMax 0`
+
 **Before:** `ClientAliveInterval` and `ClientAliveCountMax` were not set — idle SSH sessions persisted indefinitely, leaving unattended sessions exposed.
 
 **After:** `ClientAliveInterval 600` and `ClientAliveCountMax 0` configured — idle sessions terminated after 10 minutes with no keepalive retries.
@@ -151,7 +167,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-654025 — Disable SSH Root Login
 
 **Rule:** Direct SSH login as root must be disabled.
+
 **Config:** `/etc/ssh/sshd_config` — `PermitRootLogin no`
+
 **Before:** `PermitRootLogin prohibit-password` (Ubuntu default) — root login via SSH key was still permitted, which does not satisfy the STIG requirement.
 
 **After:** `PermitRootLogin no` — all SSH root login methods fully disabled.
@@ -167,7 +185,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 ### UBTU-24-412010 — Enable UFW Firewall
 
 **Rule:** A host-based firewall must be active with a default deny inbound policy.
+
 **Config:** `ufw allow ssh && ufw default deny incoming && ufw default allow outgoing && ufw --force enable`
+
 **Before:** UFW was installed but inactive — no inbound traffic restrictions in place.
 
 **After:** UFW active; default deny incoming, allow outgoing; SSH (port 22) explicitly permitted before enabling to prevent lockout.
@@ -184,6 +204,7 @@ After applying all 10 STIG controls, a Tenable Nessus Agent scan was run against
 
 **Scan date:** 2026-06-13
 **Scanner:** Tenable Nessus Agent 11.2.0 linked to Tenable.io
+
 **Method:** Agent-based — no inbound firewall rules required
 
 | Severity | Count |
