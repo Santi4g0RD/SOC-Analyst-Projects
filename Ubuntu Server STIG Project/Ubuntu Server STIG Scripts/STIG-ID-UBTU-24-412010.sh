@@ -15,9 +15,9 @@
 #     STIG-ID         : UBTU-24-412010
 #
 # .TESTED ON
-#     Date(s) Tested  :
-#     Tested By       :
-#     Systems Tested  :
+#     Date(s) Tested  : 2026-06-13
+#     Tested By       : Santiago Abel Ruiz Diaz
+#     Systems Tested  : Ubuntu Server 24.04 LTS — Microsoft Azure
 #     Shell Ver.      :
 #
 # .USAGE
