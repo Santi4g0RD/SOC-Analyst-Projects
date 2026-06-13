@@ -27,8 +27,9 @@
 
 apt-get install -y ufw
 
-ufw --force enable
+ufw allow ssh
 ufw default deny incoming
 ufw default allow outgoing
+ufw --force enable
 
-echo "UFW firewall has been enabled with default deny incoming policy."
+echo "UFW firewall has been enabled with default deny incoming policy. SSH (port 22) allowed."

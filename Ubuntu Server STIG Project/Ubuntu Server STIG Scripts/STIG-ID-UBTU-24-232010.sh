@@ -25,6 +25,8 @@
 #     Example syntax:
 #     sudo bash STIG-ID-UBTU-24-232010.sh
 
+apt-get install -y libpam-pwquality
+
 COMMON_PASSWD="/etc/security/pwquality.conf"
 
 if grep -q "^minlen" "$COMMON_PASSWD"; then
