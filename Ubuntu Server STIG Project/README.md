@@ -36,9 +36,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `apt-get install -y auditd audispd-plugins && systemctl enable --now auditd`
 
-**Before:** `auditd` was not installed — `systemctl is-enabled` and `is-active` both returned unit-not-found errors.
+**[Before](./screenshots/UBTU-24-010013-before.png):** `auditd` was not installed — `systemctl is-enabled` and `is-active` both returned unit-not-found errors.
 
-**After:** `auditd` installed, `enabled` at boot, and `active` (running).
+**[After](./screenshots/UBTU-24-010013-after.png):** `auditd` installed, `enabled` at boot, and `active` (running).
 
 **Result:** ✅ Pass
 
@@ -52,9 +52,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `/etc/audit/auditd.conf` — `max_log_file = 10`
 
-**Before:** `max_log_file = 8` (Ubuntu default — below the STIG minimum).
+**[Before](./screenshots/UBTU-24-010014-before.png):** `max_log_file = 8` (Ubuntu default — below the STIG minimum).
 
-**After:** `max_log_file = 10`
+**[After](./screenshots/UBTU-24-010014-after.png):** `max_log_file = 10`
 
 **Result:** ✅ Pass
 
@@ -70,9 +70,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `apt-get install -y unattended-upgrades` + `/etc/apt/apt.conf.d/20auto-upgrades`
 
-**Before:** `unattended-upgrades` was not enabled — security patches required manual intervention.
+**[Before](./screenshots/UBTU-24-213010-before.png):** `unattended-upgrades` was not enabled — security patches required manual intervention.
 
-**After:** Service enabled at boot; `20auto-upgrades` configured with `Update-Package-Lists "1"` and `Unattended-Upgrade "1"`.
+**[After](./screenshots/UBTU-24-213010-after.png):** Service enabled at boot; `20auto-upgrades` configured with `Update-Package-Lists "1"` and `Unattended-Upgrade "1"`.
 
 **Result:** ✅ Pass
 
@@ -86,9 +86,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `apt-get remove -y telnet telnetd inetutils-telnet`
 
-**Before:** No telnet package installed on this fresh VM — clean baseline confirmed.
+**[Before](./screenshots/UBTU-24-215010-before.png):** No telnet package installed on this fresh VM — clean baseline confirmed.
 
-**After:** `dpkg -l | grep telnet` returns no output; `apt purge` ensures any residual config is also removed.
+**[After](./screenshots/UBTU-24-215010-after.png):** `dpkg -l | grep telnet` returns no output; `apt purge` ensures any residual config is also removed.
 
 **Result:** ✅ Pass
 
@@ -102,9 +102,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `/etc/modprobe.d/usb-storage.conf` — `install usb-storage /bin/false`
 
-**Before:** `/etc/modprobe.d/usb-storage.conf` did not exist — the `usb-storage` kernel module could load freely.
+**[Before](./screenshots/UBTU-24-251010-before.png):** `/etc/modprobe.d/usb-storage.conf` did not exist — the `usb-storage` kernel module could load freely.
 
-**After:** Module blacklisted via modprobe config — any attempt to load `usb-storage` is redirected to `/bin/false`.
+**[After](./screenshots/UBTU-24-251010-after.png):** Module blacklisted via modprobe config — any attempt to load `usb-storage` is redirected to `/bin/false`.
 
 **Result:** ✅ Pass
 
@@ -120,9 +120,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `/etc/security/pwquality.conf` — `minlen = 15`
 
-**Before:** `libpam-pwquality` was not installed and `/etc/security/pwquality.conf` did not exist — no password complexity enforcement in place.
+**[Before](./screenshots/UBTU-24-232010-before.png):** `libpam-pwquality` was not installed and `/etc/security/pwquality.conf` did not exist — no password complexity enforcement in place.
 
-**After:** Package installed; `minlen = 15` written to `pwquality.conf` — PAM enforces minimum length on all password changes.
+**[After](./screenshots/UBTU-24-232010-after.png):** Package installed; `minlen = 15` written to `pwquality.conf` — PAM enforces minimum length on all password changes.
 
 **Result:** ✅ Pass
 
@@ -136,9 +136,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `/etc/security/faillock.conf` — `deny = 3`, `unlock_time = 900`
 
-**Before:** `deny` and `unlock_time` were commented out — no account lockout policy active, enabling unlimited brute-force attempts.
+**[Before](./screenshots/UBTU-24-654010-before.png):** `deny` and `unlock_time` were commented out — no account lockout policy active, enabling unlimited brute-force attempts.
 
-**After:** `deny = 3` and `unlock_time = 900` enforced — accounts lock after 3 failures and auto-unlock after 15 minutes.
+**[After](./screenshots/UBTU-24-654010-after.png):** `deny = 3` and `unlock_time = 900` enforced — accounts lock after 3 failures and auto-unlock after 15 minutes.
 
 **Result:** ✅ Pass
 
@@ -154,9 +154,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `/etc/ssh/sshd_config` — `ClientAliveInterval 600`, `ClientAliveCountMax 0`
 
-**Before:** `ClientAliveInterval` and `ClientAliveCountMax` were not set — idle SSH sessions persisted indefinitely, leaving unattended sessions exposed.
+**[Before](./screenshots/UBTU-24-255010-before.png):** `ClientAliveInterval` and `ClientAliveCountMax` were not set — idle SSH sessions persisted indefinitely, leaving unattended sessions exposed.
 
-**After:** `ClientAliveInterval 600` and `ClientAliveCountMax 0` configured — idle sessions terminated after 10 minutes with no keepalive retries.
+**[After](./screenshots/UBTU-24-255010-after.png):** `ClientAliveInterval 600` and `ClientAliveCountMax 0` configured — idle sessions terminated after 10 minutes with no keepalive retries.
 
 **Result:** ✅ Pass
 
@@ -170,9 +170,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `/etc/ssh/sshd_config` — `PermitRootLogin no`
 
-**Before:** `PermitRootLogin prohibit-password` (Ubuntu default) — root login via SSH key was still permitted, which does not satisfy the STIG requirement.
+**[Before](./screenshots/UBTU-24-654025-before.png):** `PermitRootLogin prohibit-password` (Ubuntu default) — root login via SSH key was still permitted, which does not satisfy the STIG requirement.
 
-**After:** `PermitRootLogin no` — all SSH root login methods fully disabled.
+**[After](./screenshots/UBTU-24-654025-after.png):** `PermitRootLogin no` — all SSH root login methods fully disabled.
 
 **Result:** ✅ Pass
 
@@ -188,9 +188,9 @@ Implemented and verified 10 DISA STIG security controls on an Ubuntu Server 24.0
 
 **Config:** `ufw allow ssh && ufw default deny incoming && ufw default allow outgoing && ufw --force enable`
 
-**Before:** UFW was installed but inactive — no inbound traffic restrictions in place.
+**[Before](./screenshots/UBTU-24-412010-before.png):** UFW was installed but inactive — no inbound traffic restrictions in place.
 
-**After:** UFW active; default deny incoming, allow outgoing; SSH (port 22) explicitly permitted before enabling to prevent lockout.
+**[After](./screenshots/UBTU-24-412010-after.png):** UFW active; default deny incoming, allow outgoing; SSH (port 22) explicitly permitted before enabling to prevent lockout.
 
 **Result:** ✅ Pass
 
