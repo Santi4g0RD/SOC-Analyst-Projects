@@ -270,7 +270,19 @@ After completing the STIG hardening and vulnerability scan, a CIS Ubuntu Linux 2
 | Failed | 40 |
 | Total  | 62 |
 
-The 40 failures are expected — this project targeted 10 specific DISA STIG controls, not full CIS L2 baseline coverage. CIS L2 enforces a significantly broader set of requirements including kernel hardening, PAM configurations, filesystem mount options, and additional SSH restrictions that were outside the scope of this hardening effort. The audit results establish a clear baseline and identify the remediation backlog for a full CIS L2 hardening pass.
+The 40 failures reflect gaps between the 10 DISA STIG controls applied in this project and full CIS L2 baseline coverage. The failures cluster into four areas:
+
+**1. Extended auditd rules (majority of failures — section 6.2.x)**
+The STIG hardening enabled auditd and set the log file size (UBTU-24-010013, UBTU-24-010014), but CIS L2 requires 15+ granular audit rules covering file access attempts, sudo scope changes, privilege escalation, kernel module load/unload events, date/time modification, and MAC policy changes. These rules were outside the scope of this project.
+
+**2. Separate filesystem partitions (section 1.1.x)**
+CIS L2 requires dedicated partitions for `/home`, `/var`, `/var/tmp`, `/var/log`, and `/var/log/audit`. The Azure VM was provisioned with a single root partition — this requires a custom disk layout at VM creation time and cannot be remediated post-install without a rebuild.
+
+**3. Kernel module hardening (section 1.1.1, 3.2.x)**
+CIS L2 requires disabling TIPC, SCTP, DCCP, RDS, overlayfs, and squashfs kernel modules. The STIG project disabled USB storage (UBTU-24-251010) but did not address network protocol or filesystem modules. Note: the UDF module failure is a documented Azure cloud exception — Microsoft Azure requires UDF support and the CIS audit report itself acknowledges this.
+
+**4. SSH and privilege escalation (section 5.x)**
+Additional SSH hardening is required: `DisableForwarding yes`, `GSSAPIAuthentication no`, and password confirmation for `sudo` escalation — none of which were in scope for the 10 STIG controls applied.
 
 ### Audit Reports
 
