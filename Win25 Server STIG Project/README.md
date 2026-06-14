@@ -663,6 +663,55 @@ Scripts marked **DC** use `Set-ADDefaultDomainPasswordPolicy` and must be run on
 
 ---
 
+## Vulnerability Scan — Tenable Nessus (Pre/Post Hardening)
+
+Two Tenable Nessus network scans were run against the Windows Server 2025 DC to measure the security impact of STIG hardening combined with Windows Update.
+
+- **Pre-hardening scan:** Baseline before any STIG scripts or Windows Updates applied
+- **Post-hardening scan:** After all 36 STIG controls + Windows Update completed
+
+**Scan date:** 2026-06-14
+
+**Standard:** DISA Microsoft Windows Server 2025 STIG (compliance audit)
+
+**Scanner:** Tenable Nessus — network scan from engine `10.0.0.8`
+
+### Vulnerability Delta
+
+| Severity | Pre-Hardening | Post-Hardening | Eliminated |
+|----------|:-------------:|:--------------:|:----------:|
+| Critical | 0 | 0 | — |
+| High | 2 | 1 | **1** |
+| Medium | 1 | 0 | **1** |
+| Low | 0 | 0 | — |
+| **Total** | **3** | **1** | **2** |
+
+### Eliminated Findings (resolved by Windows Update)
+
+| Severity | Finding |
+|----------|---------|
+| High | Windows Defender < 4.18.26040.7 DoS (CVE-2026-45498) |
+| Medium | Windows Defender security update (April 2026) |
+
+### Remaining Finding (not addressed by STIG scripts)
+
+| Severity | Finding | Reason Not Remediated |
+|----------|---------|----------------------|
+| High | CVE-2013-3900 — WinVerifyTrust signature validation bypass | Requires `EnableCertPaddingCheck` registry key — outside scope of this control set |
+
+> **Note:** The post-hardening scan shows plugin 117885 "Intermittent Authentication Failure" as an Info finding — this is expected. The STIG hardening scripts tightened NTLMv2 and SMB signing settings, causing one authentication protocol attempt to fail before falling back to a valid method. Credentials authenticated successfully (plugin 141118 confirmed).
+
+### Scan Reports
+
+| Report | Description |
+|--------|-------------|
+| [Pre-Hardening Executive Summary](./win25%20server%20compliance%20scans/win25-stig-pre-hardening-executive-summary-2026-06-14.pdf) | Baseline vulnerability counts before STIG hardening |
+| [Pre-Hardening Full Report](./win25%20server%20compliance%20scans/win25-stig-pre-hardening-full-report-2026-06-14.pdf) | Detailed findings — all 3 vulnerabilities |
+| [Post-Hardening Executive Summary](./win25%20server%20compliance%20scans/win25-stig-post-hardening-executive-summary-2026-06-14.pdf) | Post-hardening vulnerability counts |
+| [Post-Hardening Full Report](./win25%20server%20compliance%20scans/win25-stig-post-hardening-full-report-2026-06-14.pdf) | Detailed findings — remaining 1 vulnerability with remediation notes |
+
+---
+
 ## Screenshots
 
 Each **Before** and **After** field in the sections above links directly to its verification screenshot. All screenshots are also browsable in the [`screenshots/`](./screenshots/) folder.
