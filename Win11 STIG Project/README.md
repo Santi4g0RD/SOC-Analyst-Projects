@@ -268,6 +268,65 @@ Implemented and verified DISA STIG security controls on a Windows 11 Azure VM us
 
 ---
 
+## Vulnerability Scan — Tenable Nessus (Pre/Post Hardening)
+
+Two Tenable Nessus network scans were run against the Windows 11 VM to measure the security impact of STIG hardening combined with Windows Update.
+
+- **Pre-hardening scan:** Baseline before any STIG scripts or Windows Updates applied
+- **Post-hardening scan:** After all 12 STIG controls + Windows Update completed
+
+**Scan date:** 2026-06-14
+
+**Standard:** DISA Microsoft Windows 11 STIG v2r7 (compliance audit)
+
+**Scanner:** Tenable Nessus — network scan from engine `10.0.0.8`
+
+### Vulnerability Delta
+
+| Severity | Pre-Hardening | Post-Hardening | Eliminated |
+|----------|:-------------:|:--------------:|:----------:|
+| Critical | 0 | 0 | — |
+| High | 8 | 3 | **5** |
+| Medium | 7 | 4 | **3** |
+| Low | 2 | 1 | **1** |
+| **Total** | **17** | **8** | **9** |
+
+### Eliminated Findings (resolved by Windows Update)
+
+| Severity | Finding |
+|----------|---------|
+| High | Windows Defender outdated signature definitions |
+| High | Microsoft Outlook security updates (April 2024) |
+| High | Microsoft Teams for Desktop RCE (CVE-2025-36713) |
+| High | Windows Notepad Command Injection (CVE-2026-26168) |
+| High | Windows Defender Denial of Service (CVE-2026-45498) |
+| Medium | Windows Defender security update (April 2026) |
+| Medium | Microsoft 365 Copilot Spoofing (CVE-2026-41614) |
+| Medium | Windows Defender security update (May 2026) |
+| Low | Microsoft Teams Elevation of Privilege (CVE-2025-32708) |
+
+### Remaining Findings (not addressed by STIG scripts)
+
+| Severity | Finding | Reason Not Remediated |
+|----------|---------|----------------------|
+| High | CVE-2013-3900 — WinVerifyTrust signature validation bypass | Requires `EnableCertPaddingCheck` registry key — outside scope of this control set |
+| High | SQLite ≤ 3.51.1 — information disclosure | Bundled component; requires vendor-specific package update |
+| High | libcurl < 8.20.0 — cookie and auth credential leaks (3 CVEs) | Bundled component; requires vendor-specific package update |
+| Medium | SSL self-signed certificate on RDP/WinRM (2 findings) | Inherent to Azure VM provisioning — not a STIG finding |
+| Medium | libcurl — Netrc password leak and cross-proxy digest auth (2 CVEs) | Same libcurl bundle as above |
+| Low | ICMP timestamp response — date/time disclosure | Minor info disclosure; mitigated by network-layer controls |
+
+### Scan Reports
+
+| Report | Description |
+|--------|-------------|
+| [Pre-Hardening Executive Summary](./win11%20compliance%20scans/win11-stig-pre-hardening-executive-summary-2026-06-14.pdf) | Baseline vulnerability counts before STIG hardening |
+| [Pre-Hardening Full Report](./win11%20compliance%20scans/win11-stig-pre-hardening-full-report-2026-06-14.pdf) | Detailed findings — all 17 vulnerabilities |
+| [Post-Hardening Executive Summary](./win11%20compliance%20scans/win11-stig-post-hardening-executive-summary-2026-06-14.pdf) | Post-hardening vulnerability counts |
+| [Post-Hardening Full Report](./win11%20compliance%20scans/win11-stig-post-hardening-full-report-2026-06-14.pdf) | Detailed findings — remaining 8 vulnerabilities with remediation notes |
+
+---
+
 ## Screenshots
 
 Each **Before** and **After** field in the sections above links directly to its verification screenshot. All screenshots are also browsable in the [`screenshots/`](./screenshots/) folder.
