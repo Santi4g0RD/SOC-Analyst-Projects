@@ -723,7 +723,7 @@ Each **Before** and **After** field in the sections above links directly to its 
 | Detail | Value |
 |--------|-------|
 | Platform | Microsoft Azure |
-| VM Image | Windows Server 2025 |
+| VM Image | Windows Server 2025 Datacenter: Azure Edition |
 | Hostname | WS25-DC01.lababel.local |
 | Domain | lababel.local |
 | Role | Active Directory Domain Controller |
