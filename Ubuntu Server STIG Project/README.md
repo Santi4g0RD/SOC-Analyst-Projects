@@ -256,6 +256,31 @@ An unhandled exception in `set_tlsext_servername_callback` causes pyOpenSSL to a
 
 ---
 
+## CIS L2 Compliance Audit — Tenable Nessus (Post-Hardening)
+
+After completing the STIG hardening and vulnerability scan, a CIS Ubuntu Linux 24.04 LTS v1.0.0 L2 Server compliance audit was run against the same hardened VM to measure the broader security baseline beyond the 10 STIG controls applied.
+
+**Scan date:** 2026-06-13
+**Standard:** CIS Ubuntu Linux 24.04 LTS v1.0.0 — Level 2 Server
+**Scanner:** Tenable Nessus Agent 11.2.0
+
+| Result | Count |
+|--------|-------|
+| Passed | 22 |
+| Failed | 40 |
+| Total  | 62 |
+
+The 40 failures are expected — this project targeted 10 specific DISA STIG controls, not full CIS L2 baseline coverage. CIS L2 enforces a significantly broader set of requirements including kernel hardening, PAM configurations, filesystem mount options, and additional SSH restrictions that were outside the scope of this hardening effort. The audit results establish a clear baseline and identify the remediation backlog for a full CIS L2 hardening pass.
+
+### Audit Reports
+
+| Report | Description |
+|--------|-------------|
+| [Executive Summary](./Nessus%20Scan%20abel-ubuntu-server/cis-l2-executive-summary-abel-ubuntu-server-2026-06-13.pdf) | Pass/fail counts by CIS section, asset summary |
+| [Full Audit Detail](./Nessus%20Scan%20abel-ubuntu-server/cis-l2-audit-abel-ubuntu-server-2026-06-13.pdf) | Per-control results with descriptions and remediation guidance |
+
+---
+
 ## Related Projects
 
 - [DISA STIG: Windows Server 2025 Hardening](../Win25%20Server%20STIG%20Project/)
