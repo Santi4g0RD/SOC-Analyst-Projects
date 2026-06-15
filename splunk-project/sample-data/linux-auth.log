@@ -1,0 +1,119 @@
+===========================================================================================
+Sample Linux Authentication Log — SSH Brute Force + Password Spray Scenarios
+Sourcetype: linux_secure
+Index:      linux_secure
+File:       /var/log/auth.log  (Debian/Ubuntu)  or  /var/log/secure  (RHEL/CentOS)
+===========================================================================================
+
+HOW TO INGEST:
+  Option A — Monitor existing auth log:
+    In Splunk: Settings → Data Inputs → Files & Directories
+    Path: /var/log/auth.log   Source type: linux_secure
+
+  Option B — Upload this sample file:
+    Splunk Web → Settings → Add Data → Upload → set sourcetype=linux_secure
+
+===========================================================================================
+SCENARIO A: SSH Brute Force — 198.51.100.22 hammers "root" on web-srv-01
+            Rate: ~1 attempt/second — 40 failures in under 60 seconds
+===========================================================================================
+
+Jun 13 10:00:01 web-srv-01 sshd[8821]: Failed password for root from 198.51.100.22 port 54321 ssh2
+Jun 13 10:00:02 web-srv-01 sshd[8822]: Failed password for root from 198.51.100.22 port 54322 ssh2
+Jun 13 10:00:03 web-srv-01 sshd[8823]: Failed password for root from 198.51.100.22 port 54323 ssh2
+Jun 13 10:00:04 web-srv-01 sshd[8824]: Failed password for root from 198.51.100.22 port 54324 ssh2
+Jun 13 10:00:05 web-srv-01 sshd[8825]: Failed password for root from 198.51.100.22 port 54325 ssh2
+Jun 13 10:00:06 web-srv-01 sshd[8826]: Failed password for root from 198.51.100.22 port 54326 ssh2
+Jun 13 10:00:07 web-srv-01 sshd[8827]: Failed password for root from 198.51.100.22 port 54327 ssh2
+Jun 13 10:00:08 web-srv-01 sshd[8828]: Failed password for root from 198.51.100.22 port 54328 ssh2
+Jun 13 10:00:09 web-srv-01 sshd[8829]: Failed password for root from 198.51.100.22 port 54329 ssh2
+Jun 13 10:00:10 web-srv-01 sshd[8830]: Failed password for root from 198.51.100.22 port 54330 ssh2
+Jun 13 10:00:11 web-srv-01 sshd[8831]: Failed password for root from 198.51.100.22 port 54331 ssh2
+Jun 13 10:00:12 web-srv-01 sshd[8832]: Failed password for root from 198.51.100.22 port 54332 ssh2
+Jun 13 10:00:13 web-srv-01 sshd[8833]: Failed password for root from 198.51.100.22 port 54333 ssh2
+Jun 13 10:00:14 web-srv-01 sshd[8834]: Failed password for root from 198.51.100.22 port 54334 ssh2
+Jun 13 10:00:15 web-srv-01 sshd[8835]: Failed password for root from 198.51.100.22 port 54335 ssh2
+Jun 13 10:00:16 web-srv-01 sshd[8836]: Failed password for root from 198.51.100.22 port 54336 ssh2
+Jun 13 10:00:17 web-srv-01 sshd[8837]: Failed password for root from 198.51.100.22 port 54337 ssh2
+Jun 13 10:00:18 web-srv-01 sshd[8838]: Failed password for root from 198.51.100.22 port 54338 ssh2
+Jun 13 10:00:19 web-srv-01 sshd[8839]: Failed password for root from 198.51.100.22 port 54339 ssh2
+Jun 13 10:00:20 web-srv-01 sshd[8840]: Failed password for root from 198.51.100.22 port 54340 ssh2
+Jun 13 10:00:21 web-srv-01 sshd[8841]: Failed password for root from 198.51.100.22 port 54341 ssh2
+Jun 13 10:00:22 web-srv-01 sshd[8842]: Failed password for root from 198.51.100.22 port 54342 ssh2
+Jun 13 10:00:23 web-srv-01 sshd[8843]: Failed password for root from 198.51.100.22 port 54343 ssh2
+Jun 13 10:00:24 web-srv-01 sshd[8844]: Failed password for root from 198.51.100.22 port 54344 ssh2
+Jun 13 10:00:25 web-srv-01 sshd[8845]: Failed password for root from 198.51.100.22 port 54345 ssh2
+Jun 13 10:00:26 web-srv-01 sshd[8846]: Failed password for root from 198.51.100.22 port 54346 ssh2
+Jun 13 10:00:27 web-srv-01 sshd[8847]: Failed password for root from 198.51.100.22 port 54347 ssh2
+Jun 13 10:00:28 web-srv-01 sshd[8848]: Failed password for root from 198.51.100.22 port 54348 ssh2
+Jun 13 10:00:29 web-srv-01 sshd[8849]: Failed password for root from 198.51.100.22 port 54349 ssh2
+Jun 13 10:00:30 web-srv-01 sshd[8850]: Failed password for root from 198.51.100.22 port 54350 ssh2
+Jun 13 10:00:31 web-srv-01 sshd[8851]: Failed password for root from 198.51.100.22 port 54351 ssh2
+Jun 13 10:00:32 web-srv-01 sshd[8852]: Failed password for root from 198.51.100.22 port 54352 ssh2
+Jun 13 10:00:33 web-srv-01 sshd[8853]: Failed password for root from 198.51.100.22 port 54353 ssh2
+Jun 13 10:00:34 web-srv-01 sshd[8854]: Failed password for root from 198.51.100.22 port 54354 ssh2
+Jun 13 10:00:35 web-srv-01 sshd[8855]: Failed password for root from 198.51.100.22 port 54355 ssh2
+Jun 13 10:00:36 web-srv-01 sshd[8856]: Failed password for root from 198.51.100.22 port 54356 ssh2
+Jun 13 10:00:37 web-srv-01 sshd[8857]: Failed password for root from 198.51.100.22 port 54357 ssh2
+Jun 13 10:00:38 web-srv-01 sshd[8858]: Failed password for root from 198.51.100.22 port 54358 ssh2
+Jun 13 10:00:39 web-srv-01 sshd[8859]: Failed password for root from 198.51.100.22 port 54359 ssh2
+Jun 13 10:00:40 web-srv-01 sshd[8860]: Failed password for root from 198.51.100.22 port 54360 ssh2
+
+--- Brute force succeeds at 10:00:41 ---
+
+Jun 13 10:00:41 web-srv-01 sshd[8861]: Accepted password for root from 198.51.100.22 port 54361 ssh2
+Jun 13 10:00:41 web-srv-01 sshd[8861]: pam_unix(sshd:session): session opened for user root by (uid=0)
+
+===========================================================================================
+SCENARIO B: SSH Password Spray — 10.10.5.100 tries "Welcome1!" against 10 accounts
+            Rate: ~1 attempt per 20 seconds — evading per-account lockout
+===========================================================================================
+
+Jun 13 11:02:00 db-srv-01 sshd[9100]: Failed password for deploy from 10.10.5.100 port 41001 ssh2
+Jun 13 11:02:20 db-srv-01 sshd[9101]: Failed password for backup from 10.10.5.100 port 41002 ssh2
+Jun 13 11:02:40 db-srv-01 sshd[9102]: Failed password for postgres from 10.10.5.100 port 41003 ssh2
+Jun 13 11:03:00 db-srv-01 sshd[9103]: Failed password for ubuntu from 10.10.5.100 port 41004 ssh2
+Jun 13 11:03:20 db-srv-01 sshd[9104]: Failed password for ansible from 10.10.5.100 port 41005 ssh2
+Jun 13 11:03:40 db-srv-01 sshd[9105]: Failed password for jenkins from 10.10.5.100 port 41006 ssh2
+Jun 13 11:04:00 db-srv-01 sshd[9106]: Failed password for git from 10.10.5.100 port 41007 ssh2
+Jun 13 11:04:20 db-srv-01 sshd[9107]: Failed password for nagios from 10.10.5.100 port 41008 ssh2
+Jun 13 11:04:40 db-srv-01 sshd[9108]: Failed password for zabbix from 10.10.5.100 port 41009 ssh2
+Jun 13 11:05:00 db-srv-01 sshd[9109]: Failed password for svc-monitor from 10.10.5.100 port 41010 ssh2
+
+--- Spray hits: "backup" account had weak password "Welcome1!" ---
+
+Jun 13 11:05:20 db-srv-01 sshd[9110]: Accepted password for backup from 10.10.5.100 port 41011 ssh2
+Jun 13 11:05:20 db-srv-01 sshd[9110]: pam_unix(sshd:session): session opened for user backup by (uid=1002)
+
+===========================================================================================
+SCENARIO C: Username enumeration — 172.16.100.44 probing for valid usernames
+            "Invalid user" = account does not exist on the system
+===========================================================================================
+
+Jun 13 12:30:01 web-srv-01 sshd[9200]: Invalid user admin from 172.16.100.44 port 55001
+Jun 13 12:30:02 web-srv-01 sshd[9201]: Invalid user test from 172.16.100.44 port 55002
+Jun 13 12:30:03 web-srv-01 sshd[9202]: Invalid user oracle from 172.16.100.44 port 55003
+Jun 13 12:30:04 web-srv-01 sshd[9203]: Invalid user ftp from 172.16.100.44 port 55004
+Jun 13 12:30:05 web-srv-01 sshd[9204]: Invalid user webmaster from 172.16.100.44 port 55005
+Jun 13 12:30:06 web-srv-01 sshd[9205]: Invalid user mysql from 172.16.100.44 port 55006
+Jun 13 12:30:07 web-srv-01 sshd[9206]: Invalid user tomcat from 172.16.100.44 port 55007
+Jun 13 12:30:08 web-srv-01 sshd[9207]: Invalid user user from 172.16.100.44 port 55008
+Jun 13 12:30:09 web-srv-01 sshd[9208]: Invalid user guest from 172.16.100.44 port 55009
+Jun 13 12:30:10 web-srv-01 sshd[9209]: Invalid user pi from 172.16.100.44 port 55010
+
+--- Valid username found, pivots to password brute force ---
+
+Jun 13 12:30:11 web-srv-01 sshd[9210]: Failed password for deploy from 172.16.100.44 port 55011 ssh2
+Jun 13 12:30:12 web-srv-01 sshd[9211]: Failed password for deploy from 172.16.100.44 port 55012 ssh2
+Jun 13 12:30:13 web-srv-01 sshd[9212]: Failed password for deploy from 172.16.100.44 port 55013 ssh2
+Jun 13 12:30:14 web-srv-01 sshd[9213]: Failed password for deploy from 172.16.100.44 port 55014 ssh2
+Jun 13 12:30:15 web-srv-01 sshd[9214]: Failed password for deploy from 172.16.100.44 port 55015 ssh2
+
+===========================================================================================
+SCENARIO D: Normal baseline — legitimate failed logins (should NOT trigger alerts)
+===========================================================================================
+
+Jun 13 08:00:05 dev-box-01 sshd[7700]: Failed password for jsmith from 192.168.1.15 port 49122 ssh2
+Jun 13 08:14:32 dev-box-01 sshd[7701]: Accepted password for jsmith from 192.168.1.15 port 49150 ssh2
+Jun 13 09:05:18 build-01 sshd[7800]: Failed password for ciuser from 192.168.1.20 port 50200 ssh2
+Jun 13 09:05:25 build-01 sshd[7801]: Accepted publickey for ciuser from 192.168.1.20 port 50210 ssh2

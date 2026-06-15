@@ -1,0 +1,112 @@
+| ==================================================================================== |
+| Detection: Firewall — SMB Password Spray / Multi-Host Credential Sweep              |
+| Data Source: OPNsense filterlog (index=opnsense, sourcetype=syslog)                 |
+| Threshold: connections to port 445 from one source hitting >= 3 unique hosts        |
+|            in a 10-minute window                                                     |
+| MITRE: T1110.003 — Brute Force: Password Spraying                                   |
+|        T1021.002 — Remote Services: SMB/Windows Admin Shares (post-spray lateral)   |
+| ==================================================================================== |
+|                                                                                      |
+| Why SMB (port 445) matters for spray detection:                                      |
+|   Windows password spray via netexec/CrackMapExec authenticates over SMB.           |
+|   A spray targeting 10 accounts on the same DC generates 10 connections to 445      |
+|   on one host. But if the attacker sprays across multiple hosts (e.g., to find      |
+|   local admin reuse), the firewall sees connections to 445 on many IPs — a          |
+|   strong lateral movement signal that endpoint logs on any single host would miss.  |
+|                                                                                      |
+| ==================================================================================== |
+
+|
+| ── Step 1: Parse filterlog entries for SMB (445) and related auth ports ─────────────
+|
+
+index=opnsense sourcetype=syslog "filterlog"
+| rex field=_raw "filterlog: (?P<rule_num>[^,]+),(?:[^,]*,){3}(?P<interface>[^,]+),(?P<reason>[^,]+),(?P<action>[^,]+),(?P<direction>[^,]+),4,(?:[^,]*,){6}(?P<proto_id>[^,]+),(?P<proto>tcp|udp),(?P<pkt_len>[^,]+),(?P<src_ip>[^,]+),(?P<dst_ip>[^,]+),(?P<src_port>[^,]+),(?P<dst_port>[^,])"
+| where isnotnull(src_ip) AND isnotnull(dst_port)
+| eval dst_port=tonumber(dst_port)
+
+|
+| ── Step 2: Filter to credential attack ports ────────────────────────────────────────
+|   445  = SMB (netexec spray, CrackMapExec)
+|   135  = RPC Endpoint Mapper (often precedes SMB auth)
+|   139  = NetBIOS Session (legacy SMB)
+|   5985 = WinRM HTTP (netexec --protocol winrm spray)
+|   5986 = WinRM HTTPS
+|
+
+| where dst_port IN (445, 135, 139, 5985, 5986)
+| eval
+    service=case(
+        dst_port=445,  "SMB",
+        dst_port=135,  "RPC",
+        dst_port=139,  "NetBIOS",
+        dst_port=5985, "WinRM-HTTP",
+        dst_port=5986, "WinRM-HTTPS",
+        true(),        "Unknown"
+    )
+
+|
+| ── Step 3: Bucket into 10-minute windows, focus on host spread per source ────────────
+|
+
+| bucket _time span=10m
+| stats
+    count               as connection_count,
+    dc(dst_ip)          as unique_hosts,
+    values(dst_ip)      as targeted_hosts,
+    dc(dst_port)        as unique_ports,
+    values(dst_port)    as ports_hit,
+    values(service)     as services,
+    values(action)      as fw_actions
+  by _time, src_ip
+
+|
+| ── Step 4: Spray logic — one source hitting multiple hosts on auth ports ─────────────
+|
+
+| where unique_hosts >= 3
+| eval
+    detection=case(
+        unique_hosts >= 10, "Firewall Password Spray — Wide (10+ hosts)",
+        unique_hosts >= 5,  "Firewall Password Spray — Moderate (5–9 hosts)",
+        unique_hosts >= 3,  "Firewall SMB Sweep (3–4 hosts)"
+    ),
+    severity=case(
+        unique_hosts >= 10, "Critical",
+        unique_hosts >= 5,  "High",
+        unique_hosts >= 3,  "Medium"
+    ),
+    avg_connections_per_host=round(connection_count / unique_hosts, 1),
+    mitre_tactic="Credential Access",
+    mitre_technique="T1110.003 — Brute Force: Password Spraying",
+    window_start=strftime(_time, "%Y-%m-%d %H:%M:%S UTC"),
+    window_end=strftime(_time + 600, "%Y-%m-%d %H:%M:%S UTC")
+
+|
+| ── Step 5: Surface results ──────────────────────────────────────────────────────────
+|
+
+| table
+    window_start, window_end, severity, detection,
+    src_ip,
+    unique_hosts, connection_count, avg_connections_per_host,
+    targeted_hosts, services, fw_actions,
+    mitre_technique
+| sort -unique_hosts
+
+
+| ==================================================================================== |
+| Escalation path — after this alert fires:                                           |
+|                                                                                      |
+| 1. Confirm spray on the DC (EventCode 4625, same src_ip, many TargetUserNames):     |
+|    index=wineventlog EventCode=4625 IpAddress="<src_ip>" earliest=-15m              |
+|    | stats dc(TargetUserName) as unique_accounts, count by ComputerName             |
+|                                                                                      |
+| 2. Check for successful logon after spray:                                           |
+|    index=wineventlog EventCode=4624 LogonType=3 IpAddress="<src_ip>" earliest=-15m  |
+|    | table _time, TargetUserName, ComputerName                                      |
+|                                                                                      |
+| 3. If a host accepted SMB after the sweep, check for share access:                  |
+|    index=wineventlog EventCode=5140 IpAddress="<src_ip>" earliest=-30m             |
+|    | table _time, ShareName, ComputerName, SubjectUserName                          |
+| ==================================================================================== |

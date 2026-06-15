@@ -1,0 +1,99 @@
+| ==================================================================================== |
+| Detection: Firewall — SSH / RDP Brute Force                                         |
+| Data Source: OPNsense filterlog (index=opnsense, sourcetype=syslog)                 |
+| Threshold: >= 10 TCP connections to port 22 or 3389 from one source in 5 minutes   |
+| MITRE: T1110.001 — Brute Force: Password Guessing                                   |
+| ==================================================================================== |
+|                                                                                      |
+| Advantage over endpoint-only detection:                                              |
+|   Firewall sees the attack before authentication even occurs — blocked packets       |
+|   are invisible to the endpoint but fully visible here. Provides earlier warning     |
+|   and catches attacks against hosts that may not have a Splunk forwarder.           |
+|                                                                                      |
+| ==================================================================================== |
+
+|
+| ── Step 1: Parse filterlog entries for TCP connections to brute-force ports ─────────
+|
+|   OPNsense filterlog is CSV. Fields (IPv4 TCP/UDP):                                  |
+|   rule,subrule,anchor,tracker,iface,reason,action,direction,ipver,                  |
+|   tos,ecn,ttl,id,offset,flags,proto_id,proto,length,src_ip,dst_ip,src_port,dst_port |
+|
+
+index=opnsense sourcetype=syslog "filterlog"
+| rex field=_raw "filterlog: (?P<rule_num>[^,]+),(?:[^,]*,){3}(?P<interface>[^,]+),(?P<reason>[^,]+),(?P<action>[^,]+),(?P<direction>[^,]+),4,(?:[^,]*,){6}(?P<proto_id>[^,]+),(?P<proto>tcp|udp),(?P<pkt_len>[^,]+),(?P<src_ip>[^,]+),(?P<dst_ip>[^,]+),(?P<src_port>[^,]+),(?P<dst_port>[^,])"
+| where isnotnull(src_ip) AND isnotnull(dst_port)
+| eval dst_port=tonumber(dst_port)
+
+|
+| ── Step 2: Filter to brute-force target ports ───────────────────────────────────────
+|   Port 22   = SSH
+|   Port 3389 = RDP
+|   Port 23   = Telnet (legacy, still worth watching)
+|
+
+| where dst_port IN (22, 3389, 23)
+| eval
+    service=case(
+        dst_port=22,   "SSH",
+        dst_port=3389, "RDP",
+        dst_port=23,   "Telnet",
+        true(),        "Unknown"
+    )
+
+|
+| ── Step 3: Bucket into 5-minute windows, count connection attempts per source ────────
+|
+
+| bucket _time span=5m
+| stats
+    count               as connection_count,
+    dc(dst_ip)          as unique_targets,
+    values(dst_ip)      as target_hosts,
+    values(action)      as fw_actions,
+    first(interface)    as fw_interface
+  by _time, src_ip, dst_port, service
+
+|
+| ── Step 4: Apply threshold ──────────────────────────────────────────────────────────
+|
+
+| where connection_count >= 10
+| eval
+    detection="Firewall Brute Force — " + service,
+    severity=case(
+        connection_count >= 200, "Critical",
+        connection_count >= 50,  "High",
+        connection_count >= 10,  "Medium"
+    ),
+    multi_host=if(unique_targets > 1, "YES — scanning multiple hosts", "No — focused on single host"),
+    mitre_tactic="Credential Access",
+    mitre_technique="T1110.001 — Brute Force: Password Guessing",
+    window_start=strftime(_time, "%Y-%m-%d %H:%M:%S UTC"),
+    window_end=strftime(_time + 300, "%Y-%m-%d %H:%M:%S UTC")
+
+|
+| ── Step 5: Surface results ──────────────────────────────────────────────────────────
+|
+
+| table
+    window_start, window_end, severity, detection,
+    src_ip, service, dst_port,
+    connection_count, unique_targets, target_hosts, multi_host,
+    fw_actions, fw_interface, mitre_technique
+| sort -connection_count
+
+
+| ==================================================================================== |
+| Correlate with endpoint detections:                                                  |
+|   After seeing this firewall alert, pivot to endpoint logs to confirm impact:        |
+|                                                                                      |
+|   index=wineventlog EventCode=4625 src_ip="<attacker_ip>"                          |
+|   | stats count by TargetUserName                                                    |
+|                                                                                      |
+|   index=linux_secure "Failed password" src_ip="<attacker_ip>"                      |
+|   | stats count by target_user                                                       |
+|                                                                                      |
+| multi_host=YES is a strong pivot indicator: attacker found a valid credential       |
+| and is now trying it against multiple targets (lateral movement attempt).            |
+| ==================================================================================== |

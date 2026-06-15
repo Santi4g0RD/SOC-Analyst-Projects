@@ -1,0 +1,68 @@
+| ==================================================================================== |
+| Detection: Windows Brute Force — Multiple failed logons against a single account     |
+| Data Source: Windows Security Event Log (EventCode 4625)                             |
+| Threshold: >= 10 failures against the same account within 5 minutes                  |
+| MITRE: T1110.001 — Brute Force: Password Guessing                                   |
+| ==================================================================================== |
+
+|
+| ── Step 1: Pull failed logon events, filter to network/remote logon types ──────────
+|
+
+index=wineventlog (EventCode=4625 OR source="WinEventLog:Security")
+    LogonType IN (3, 7, 10)
+    TargetUserName!="-"
+    TargetUserName!="ANONYMOUS LOGON"
+    TargetDomainName!="NT AUTHORITY"
+| eval src_ip=coalesce(IpAddress, src_ip)
+| where src_ip!="::1" AND src_ip!="-" AND src_ip!="127.0.0.1"
+
+|
+| ── Step 2: Bucket into 5-minute windows and count failures per account per source ──
+|
+
+| bucket _time span=5m
+| stats
+    count                 as failure_count,
+    dc(src_ip)            as unique_sources,
+    values(src_ip)        as source_ips,
+    values(LogonType)     as logon_types,
+    first(ComputerName)   as target_host
+  by _time, TargetUserName, TargetDomainName
+
+|
+| ── Step 3: Apply threshold — flag accounts with >= 10 failures in the window ────────
+|
+
+| where failure_count >= 10
+| eval
+    detection="Windows Brute Force",
+    severity=case(
+        failure_count >= 50, "Critical",
+        failure_count >= 25, "High",
+        failure_count >= 10, "Medium"
+    ),
+    mitre_tactic="Credential Access",
+    mitre_technique="T1110.001 — Brute Force: Password Guessing",
+    window_start=strftime(_time, "%Y-%m-%d %H:%M:%S UTC"),
+    window_end=strftime(_time + 300, "%Y-%m-%d %H:%M:%S UTC")
+
+|
+| ── Step 4: Surface results ──────────────────────────────────────────────────────────
+|
+
+| table
+    window_start, window_end, severity, detection,
+    TargetUserName, TargetDomainName, target_host,
+    failure_count, unique_sources, source_ips,
+    logon_types, mitre_technique
+| sort -failure_count
+
+
+| ==================================================================================== |
+| Tuning notes:                                                                        |
+|   - Adjust span=5m and threshold (>= 10) to reduce noise in your environment        |
+|   - Add NOT TargetUserName IN ("service_acct1","svc_backup") to exclude known svc   |
+|   - LogonType 3 = Network, 7 = Unlock, 10 = RemoteInteractive (RDP)                |
+|   - EventCode 4740 (account lockout) is a strong corroborating signal               |
+| ==================================================================================== |

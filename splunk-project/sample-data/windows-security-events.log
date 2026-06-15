@@ -1,0 +1,258 @@
+===========================================================================================
+Sample Windows Security Event Log — Password Spray + Brute Force Scenarios
+Sourcetype: WinEventLog:Security
+Index:      wineventlog
+===========================================================================================
+
+HOW TO INGEST:
+  1. In Splunk Web → Settings → Data Inputs → Files & Directories
+  2. Upload this file, set sourcetype = WinEventLog:Security
+  3. Or via CLI: splunk add monitor /path/to/windows-security-events.log -sourcetype WinEventLog:Security
+
+===========================================================================================
+SCENARIO A: Password Spray — 192.168.10.55 targets 12 accounts in 8 minutes
+===========================================================================================
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:01:02Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">jsmith</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:01:18Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">mjones</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:01:35Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">awhite</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:01:52Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">rbrown</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:02:09Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">klee</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:02:26Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">tgarcia</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:02:43Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">dwilson</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:03:00Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">cmartinez</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:03:18Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">sthompson</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:03:36Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">phenderson</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:03:55Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">nrodriguez</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T08:04:12Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">btaylor</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+--- SPRAY SUCCESS: klee's credentials valid, attacker logs in ---
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4624</EventID><TimeCreated SystemTime="2026-06-13T08:04:45Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">klee</Data><Data Name="TargetDomainName">CORP</Data>
+    <Data Name="LogonType">3</Data><Data Name="IpAddress">192.168.10.55</Data>
+    <Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+===========================================================================================
+SCENARIO B: Brute Force — 203.0.113.88 hammers the "administrator" account
+===========================================================================================
+
+SubStatus codes: 0xC000006A = wrong password, 0xC0000234 = account locked out
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:01Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:03Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:05Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:07Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:09Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:11Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:14Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:17Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:20Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:23Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:26Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4625</EventID><TimeCreated SystemTime="2026-06-13T09:15:29Z"/><Computer>WRK01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data><Data Name="TargetDomainName">WRK01</Data>
+    <Data Name="LogonType">10</Data><Data Name="IpAddress">203.0.113.88</Data>
+    <Data Name="SubStatus">0xC000006A</Data><Data Name="AuthenticationPackageName">NTLM</Data>
+  </EventData>
+</Event>
+
+--- Account lockout triggered after 12 failures ---
+
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System><EventID>4740</EventID><TimeCreated SystemTime="2026-06-13T09:15:30Z"/><Computer>DC01.corp.local</Computer></System>
+  <EventData>
+    <Data Name="TargetUserName">Administrator</Data>
+    <Data Name="SubjectUserName">WRK01$</Data>
+    <Data Name="CallerComputerName">WRK01</Data>
+  </EventData>
+</Event>

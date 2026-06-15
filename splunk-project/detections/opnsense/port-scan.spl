@@ -1,0 +1,110 @@
+| ==================================================================================== |
+| Detection: Firewall — Port Scan / Reconnaissance                                    |
+| Data Source: OPNsense filterlog (index=opnsense, sourcetype=syslog)                 |
+| Threshold: >= 15 unique destination ports from one source in 2 minutes              |
+| MITRE: T1046 — Network Service Discovery                                             |
+|        T1595 — Active Scanning                                                       |
+| ==================================================================================== |
+|                                                                                      |
+| Port scans almost always precede credential attacks in the kill chain.               |
+| An attacker who scans for open port 22, 445, 3389 before launching hydra/netexec    |
+| will appear here first. Detecting the scan gives you time to block or alert before  |
+| the credential attack begins. In this lab, Kali running nmap is the source.         |
+|                                                                                      |
+| ==================================================================================== |
+
+|
+| ── Step 1: Parse all filterlog entries (not just specific ports) ────────────────────
+|
+
+index=opnsense sourcetype=syslog "filterlog"
+| rex field=_raw "filterlog: (?P<rule_num>[^,]+),(?:[^,]*,){3}(?P<interface>[^,]+),(?P<reason>[^,]+),(?P<action>[^,]+),(?P<direction>[^,]+),4,(?:[^,]*,){6}(?P<proto_id>[^,]+),(?P<proto>tcp|udp|icmp),(?P<pkt_len>[^,]+),(?P<src_ip>[^,]+),(?P<dst_ip>[^,]+),(?P<src_port>[^,]+),(?P<dst_port>[^,])"
+| where isnotnull(src_ip) AND isnotnull(dst_port)
+| eval dst_port=tonumber(dst_port)
+
+|
+| ── Step 2: Exclude noisy but legitimate high-port traffic ──────────────────────────
+|   Skip ephemeral ports that appear as dst_port during normal sessions               |
+
+| where dst_port <= 49151
+
+|
+| ── Step 3: Bucket into 2-minute windows, count unique destination ports per source ──
+|
+
+| bucket _time span=2m
+| stats
+    count               as total_packets,
+    dc(dst_port)        as unique_ports,
+    values(dst_port)    as scanned_ports,
+    dc(dst_ip)          as unique_hosts,
+    values(dst_ip)      as scanned_hosts,
+    values(action)      as fw_actions,
+    values(proto)       as protocols
+  by _time, src_ip
+
+|
+| ── Step 4: Apply scan threshold ─────────────────────────────────────────────────────
+|
+
+| where unique_ports >= 15
+| eval
+    scan_type=case(
+        unique_hosts >= 5 AND unique_ports >= 15, "Host Sweep + Port Scan (Full Recon)",
+        unique_hosts >= 5,                        "Host Sweep (Live Host Discovery)",
+        unique_ports >= 50,                       "Aggressive Port Scan (> 50 ports)",
+        unique_ports >= 15,                       "Port Scan (15–49 ports)"
+    ),
+    severity=case(
+        unique_ports >= 100 OR unique_hosts >= 10, "High",
+        unique_ports >= 50  OR unique_hosts >= 5,  "Medium",
+        true(),                                    "Low"
+    ),
+    key_ports_found=mvfilter(match(scanned_ports, "^(22|23|25|80|443|445|3306|3389|5985|5986|8080|8443)$")),
+    mitre_tactic="Reconnaissance",
+    mitre_technique="T1046 — Network Service Discovery",
+    window_start=strftime(_time, "%Y-%m-%d %H:%M:%S UTC"),
+    window_end=strftime(_time + 120, "%Y-%m-%d %H:%M:%S UTC")
+
+|
+| ── Step 5: Surface results ──────────────────────────────────────────────────────────
+|
+
+| table
+    window_start, window_end, severity, scan_type,
+    src_ip,
+    unique_ports, unique_hosts, total_packets,
+    key_ports_found, scanned_hosts,
+    protocols, fw_actions,
+    mitre_technique
+| sort -unique_ports
+
+
+| ==================================================================================== |
+| Suricata correlation — if Suricata fired an ET SCAN alert from the same source,     |
+| join it here for a multi-layer confirmation:                                         |
+|                                                                                      |
+| index=opnsense "ET SCAN" src_ip="<attacker_ip>" earliest=-10m                      |
+| | spath | table _time, src_ip, dest_ip, dest_port, alert.signature                 |
+|                                                                                      |
+| Triage note:                                                                         |
+|   key_ports_found showing 22, 445, 3389 together is the classic pre-attack recon   |
+|   profile for a credential-based intrusion. Escalate and watch those ports.         |
+| ==================================================================================== |
+
+
+| ── Bonus: Suricata-based scan detection (no filterlog parsing needed) ───────────────
+|   Use this if Suricata EVE JSON is flowing into the opnsense index                  |
+
+index=opnsense "event_type\":\"alert"
+| spath
+| search "alert.category"="Attempted Information Leak" OR "alert.category"="Potentially Bad Traffic"
+| rex field="alert.signature" "(?P<scan_type>SCAN|SWEEP|PROBE)"
+| stats
+    count           as alert_count,
+    values("alert.signature") as signatures,
+    dc(dest_ip)     as unique_targets,
+    dc(dest_port)   as unique_ports
+  by src_ip, "alert.category"
+| where alert_count >= 3
+| sort -alert_count
