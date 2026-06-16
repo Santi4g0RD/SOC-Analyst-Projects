@@ -1,0 +1,3 @@
+| comment "T1053.005 - Scheduled Task/Job. Sysmon catches schtasks.exe process creation by default; native EventCode 4698 requires enabling the 'Other Object Access Events' advanced audit subcategory, which is off by default."
+index=sysmon EventCode=1 Image="*schtasks.exe"
+| table _time, Image, CommandLine, ParentImage, User

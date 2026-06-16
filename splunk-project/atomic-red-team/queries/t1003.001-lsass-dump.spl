@@ -1,0 +1,5 @@
+| comment "T1003.001 - OS Credential Dumping: LSASS Memory. Requires ProcessAccess (EventCode 10) targeting lsass.exe, which Sysmon's default SwiftOnSecurity config does NOT log out of the box."
+index=sysmon EventCode=10 TargetImage="*lsass.exe"
+| sort -_time
+| table _time, SourceImage, TargetImage, GrantedAccess, CallTrace
+| where GrantedAccess!="0x1000"

@@ -1,0 +1,4 @@
+| comment "T1135 - Network Share Discovery"
+index=sysmon EventCode=1 CommandLine="*net view*"
+| sort -_time
+| table _time, Image, CommandLine, ParentImage, User

@@ -1,0 +1,3 @@
+| comment "T1070.001 - Indicator Removal: Clear Windows Event Logs. An empty/near-empty Security log immediately followed by a 1102 event is one of the most reliable anti-forensics signals on Windows."
+index=wineventlog EventCode=1102
+| table _time, host, user, Subject_User_Name

@@ -1,0 +1,4 @@
+| comment "T1083 - File and Directory Discovery"
+index=sysmon (EventCode=1 OR EventCode=11) (CommandLine="*dir /s*" OR CommandLine="*tree /F*" OR TargetFilename="*T1083Test1.txt")
+| sort -_time
+| table _time, EventCode, Image, CommandLine, TargetFilename, ParentImage

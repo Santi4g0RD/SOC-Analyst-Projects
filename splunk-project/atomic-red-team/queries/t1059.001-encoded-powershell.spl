@@ -1,0 +1,4 @@
+| comment "T1059.001 - Command and Scripting Interpreter: PowerShell. Catches both the long-form -EncodedCommand and the abbreviated -E switch, since attackers commonly use minimal switch forms to dodge naive string-match rules."
+index=sysmon EventCode=1 Image="*powershell.exe" (CommandLine="* -E *" OR CommandLine="*EncodedCommand*" OR CommandLine="*-enc*")
+| sort -_time
+| table _time, Image, CommandLine, ParentImage, User

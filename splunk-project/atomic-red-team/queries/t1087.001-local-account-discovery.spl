@@ -1,0 +1,4 @@
+| comment "T1087.001 - Account Discovery: Local Account. Tight sub-second gaps between net.exe/net1.exe invocations indicate scripted enumeration, not manual typing."
+index=sysmon EventCode=1 (Image="*net.exe" OR Image="*net1.exe" OR Image="*cmdkey.exe")
+| sort -_time
+| table _time, Image, CommandLine, ParentImage, User

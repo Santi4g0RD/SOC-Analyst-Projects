@@ -9,7 +9,7 @@
 
 ## Overview
 
-This is the platform everything else in this portfolio runs on: a self-hosted Proxmox lab with an OPNsense firewall segmenting an attacker VLAN from a target LAN, and a Splunk Enterprise instance collecting logs from every target. [`credential-attack-detection/`](../credential-attack-detection/) builds directly on top of this. So will the upcoming Atomic Red Team project.
+This is the platform everything else in this portfolio runs on: a self-hosted Proxmox lab with an OPNsense firewall segmenting an attacker VLAN from a target LAN, and a Splunk Enterprise instance collecting logs from every target. Both [`credential-attack-detection/`](../credential-attack-detection/) and [`atomic-red-team/`](../atomic-red-team/) build directly on top of this.
 
 ---
 

@@ -1,0 +1,3 @@
+| comment "T1053.005 - native Security log coverage. Requires: auditpol /set /subcategory:'Other Object Access Events' /success:enable /failure:enable"
+index=wineventlog EventCode=4698
+| table _time, host, Task_Name, Command

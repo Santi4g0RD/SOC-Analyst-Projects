@@ -1,0 +1,4 @@
+| comment "T1547.001 - Boot or Logon Autostart Execution: Registry Run Keys"
+index=sysmon EventCode=13 TargetObject="*CurrentVersion\\Run*"
+| sort -_time
+| table _time, Image, TargetObject, Details
