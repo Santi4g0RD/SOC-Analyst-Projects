@@ -91,7 +91,7 @@ Created two additional Linux bridges beyond the default management bridge:
 
 **Syslog forwarding:**
 - System → Logging/Targets → UDP → 192.168.10.50:514
-- Confirmed working — `filterlog` events flow into `index=opnsense`, sourcetype `syslog`
+- Confirmed working — `filterlog` events flow into `index=opnsense`, sourcetype `syslog` ([proof](screenshots/opnsense-syslog-confirmed.png))
 
 Full step-by-step console/GUI build log: [`opnsense-build-log.md`](opnsense-build-log.md)
 
@@ -100,7 +100,7 @@ Full step-by-step console/GUI build log: [`opnsense-build-log.md`](opnsense-buil
 - Ubuntu 26.04 Server, hostname `splunk`, static IP 192.168.10.50
 - Splunk Enterprise 10.4.0 installed via `.deb` package, running with `--run-as-root`
 - Boot-start enabled, Web UI on port 8000
-- Indexes created: `wineventlog` (10 GB), `linux_secure` (10 GB), `opnsense` (10 GB)
+- Indexes created: `wineventlog` (10 GB), `linux_secure` (10 GB), `opnsense` (10 GB) ([proof](screenshots/splunk-indexes-created.png))
 - UDP 514 input configured: sourcetype `syslog` → index `opnsense`
 
 ### 4. Windows Server 2025 Target (VM 207)

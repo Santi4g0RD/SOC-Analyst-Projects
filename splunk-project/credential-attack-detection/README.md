@@ -47,6 +47,8 @@ index=wineventlog EventCode=4625
 
 **Result:** 31 EventCode 4625 failures, 6 unique accounts, all from 192.168.20.100. Both `windows/brute-force.spl` and `windows/password-spray.spl` fire on the same row since both attacks ran from the same attacker IP and landed in the same bucket window — the brute force detection catches the high failure count, the spray detection catches the unique account count.
 
+[Brute force proof](screenshots/windows-brute-force-detected.png) · [Password spray proof](screenshots/windows-password-spray-detected.png)
+
 **Field name gotcha (Windows Server 2025 + Splunk UF 9.x):** the generic field names assumed when first writing these detections didn't match what Splunk's Windows TA actually extracts.
 
 | Field | Correct name | Note |
@@ -79,6 +81,8 @@ index=linux_secure sshd ("Failed password" OR "Invalid user")
 ```
 
 **Result:** 21 failed SSH logons, 6 unique accounts, from 192.168.20.100. Run a few minutes apart, the two attacks landed in *separate* 5-minute buckets — the brute force detection caught a clean 10-failures/1-account window, and a clean 11-failures/5-accounts window. The wider 10-minute spray detection merged both into a single 21-failures/6-accounts row. Good illustration of why bucket window size matters: too narrow and a slow spray fragments below threshold; too wide and you lose the ability to tell a brute force apart from a spray sharing the same IP.
+
+[Brute force proof](screenshots/linux-brute-force-detected.png) · [Password spray proof](screenshots/linux-password-spray-detected.png)
 
 **Gotcha:** `splunk add monitor` on the Kali Purple forwarder didn't write to `etc/system/local/inputs.conf` as expected — it landed in `etc/apps/search/local/inputs.conf`, with a typo (`index = linux_secur` instead of `linux_secure`). Splunk gives no error when events route to a non-existent index — they're silently dropped. The forwarder connection and source file both looked perfectly healthy the whole time. Caught by grepping every `inputs.conf` under `etc/apps/*/local/` for the actual monitor stanza.
 
