@@ -53,15 +53,14 @@ OPNsense sits at the boundary of all three networks. The attacker VLAN (`vmbr2`)
 ## Detection Data Flow
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'background': '#1e1e2e', 'primaryColor': '#2a2a3d', 'primaryTextColor': '#e0e0f0', 'primaryBorderColor': '#555577', 'lineColor': '#aaaacc', 'secondaryColor': '#252535', 'tertiaryColor': '#1a1a2a', 'clusterBkg': '#16162a', 'clusterBorder': '#44446a', 'edgeLabelBackground': '#2a2a3d', 'titleColor': '#c0c0e0'}}}%%
 flowchart TB
-    classDef attacker fill:#c0392b,color:#fff,stroke:#e74c3c,stroke-width:2px
-    classDef winTarget fill:#1565c0,color:#fff,stroke:#42a5f5,stroke-width:2px
-    classDef linuxTarget fill:#6a1b9a,color:#fff,stroke:#ab47bc,stroke-width:2px
-    classDef firewall fill:#ad1457,color:#fff,stroke:#f06292,stroke-width:2px
-    classDef siem fill:#00695c,color:#fff,stroke:#26a69a,stroke-width:2px
-    classDef edr fill:#4527a0,color:#fff,stroke:#7c4dff,stroke-width:2px
-    classDef analyst fill:#e65100,color:#fff,stroke:#ff8a65,stroke-width:2px
+    classDef attacker fill:#c0392b,color:#fff,stroke:#922b21,stroke-width:2px
+    classDef winTarget fill:#2471a3,color:#fff,stroke:#1a5276,stroke-width:2px
+    classDef linuxTarget fill:#7d3c98,color:#fff,stroke:#5b2c6f,stroke-width:2px
+    classDef firewall fill:#c2185b,color:#fff,stroke:#880e4f,stroke-width:2px
+    classDef siem fill:#00897b,color:#fff,stroke:#00574b,stroke-width:2px
+    classDef edr fill:#5e35b1,color:#fff,stroke:#3d1d8c,stroke-width:2px
+    classDef analyst fill:#e65100,color:#fff,stroke:#bf360c,stroke-width:2px
 
     subgraph PROXMOX["Proxmox Host — pve1  |  Intel i5-4570  ·  31 GB RAM  ·  3.5 TB HDD"]
         direction TB
