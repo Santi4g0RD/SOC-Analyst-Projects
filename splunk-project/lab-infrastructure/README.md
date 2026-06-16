@@ -53,14 +53,15 @@ OPNsense sits at the boundary of all three networks. The attacker VLAN (`vmbr2`)
 ## Detection Data Flow
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#1e1e2e', 'primaryColor': '#2a2a3d', 'primaryTextColor': '#e0e0f0', 'primaryBorderColor': '#555577', 'lineColor': '#aaaacc', 'secondaryColor': '#252535', 'tertiaryColor': '#1a1a2a', 'clusterBkg': '#16162a', 'clusterBorder': '#44446a', 'edgeLabelBackground': '#2a2a3d', 'titleColor': '#c0c0e0'}}}%%
 flowchart TB
-    classDef attacker fill:#e17055,color:#fff,stroke:#d63031,stroke-width:2px
-    classDef winTarget fill:#74b9ff,color:#000,stroke:#0984e3,stroke-width:2px
-    classDef linuxTarget fill:#a29bfe,color:#000,stroke:#6c5ce7,stroke-width:2px
-    classDef firewall fill:#fd79a8,color:#000,stroke:#e84393,stroke-width:2px
-    classDef siem fill:#00b894,color:#fff,stroke:#00cec9,stroke-width:2px
-    classDef edr fill:#6c5ce7,color:#fff,stroke:#4834d4,stroke-width:2px
-    classDef analyst fill:#fdcb6e,color:#000,stroke:#e17055,stroke-width:2px
+    classDef attacker fill:#c0392b,color:#fff,stroke:#e74c3c,stroke-width:2px
+    classDef winTarget fill:#1565c0,color:#fff,stroke:#42a5f5,stroke-width:2px
+    classDef linuxTarget fill:#6a1b9a,color:#fff,stroke:#ab47bc,stroke-width:2px
+    classDef firewall fill:#ad1457,color:#fff,stroke:#f06292,stroke-width:2px
+    classDef siem fill:#00695c,color:#fff,stroke:#26a69a,stroke-width:2px
+    classDef edr fill:#4527a0,color:#fff,stroke:#7c4dff,stroke-width:2px
+    classDef analyst fill:#e65100,color:#fff,stroke:#ff8a65,stroke-width:2px
 
     subgraph PROXMOX["Proxmox Host — pve1  |  Intel i5-4570  ·  31 GB RAM  ·  3.5 TB HDD"]
         direction TB
@@ -81,21 +82,21 @@ flowchart TB
             subgraph VM206["VM 206 — 192.168.10.50"]
                 WAZUH["Wazuh Manager\n---\nEDR alert processing\nBrute force · Kerberoasting\nDCSync · Priv escalation"]:::edr
                 SPLUNK["Splunk Enterprise 10.4\n---\nindexes: wineventlog · sysmon\nopnsense · wazuh · linux_secure"]:::siem
-                WAZUH -->|"HEC forward\nindex=wazuh"| SPLUNK
+                WAZUH -->|"HEC forward / index=wazuh"| SPLUNK
             end
         end
     end
 
     ANALYST["SOC Analyst\n---\nSplunk Web :8000\nDetection Engineering\nThreat Hunting"]:::analyst
 
-    KALI -->|"Attack traffic\nSMB · SSH · Kerberos · LDAP"| OPN
-    OPN -->|"filterlog + Suricata alerts\nindex=opnsense"| SPLUNK
+    KALI -->|"Attack traffic — SMB · SSH · Kerberos · LDAP"| OPN
+    OPN -->|"filterlog + Suricata alerts / index=opnsense"| SPLUNK
     OPN -->|"Allowed flows"| WINTGT & WINDC & LINUX
     WINTGT & WINDC & LINUX -->|"Wazuh agent telemetry"| WAZUH
-    WINTGT -->|"Sysmon EC 1·10·11·13\nSecurity log 4625·4698·1102\nSplunk UF → wineventlog/sysmon"| SPLUNK
-    WINDC -->|"Sysmon + DC Security log\n4768·4769·4662·4625\nSplunk UF → wineventlog/sysmon"| SPLUNK
-    LINUX -->|"auth.log · rsyslog\nSplunk UF → linux_secure"| SPLUNK
-    ANALYST <-->|"Splunk Web UI\nhttp://192.168.10.50:8000"| SPLUNK
+    WINTGT -->|"Sysmon + Security log / index=sysmon / wineventlog"| SPLUNK
+    WINDC -->|"DC Security log 4768·4769·4662 / index=wineventlog"| SPLUNK
+    LINUX -->|"auth.log rsyslog / index=linux_secure"| SPLUNK
+    ANALYST <-->|"Splunk Web UI :8000"| SPLUNK
 ```
 
 ---
