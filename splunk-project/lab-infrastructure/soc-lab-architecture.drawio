@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1500" pageHeight="950" math="0" shadow="1">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- ═══════════════════════════════════════════ TITLE ═══════════════════════════════════════════ -->
+    <mxCell id="2" value="SOC Detection Lab Architecture" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontStyle=1;fontSize=26;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="20" y="18" width="620" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="Proxmox Home Lab  |  OPNsense · Sysmon · Wazuh EDR · Splunk SIEM" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=12;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="20" y="60" width="660" height="20" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════ LEGEND ═══════════════════════════════════════════ -->
+    <mxCell id="4" value="&lt;b&gt;Legend&lt;/b&gt;" style="swimlane;startSize=24;fillColor=#f5f5f5;strokeColor=#aaaaaa;fontSize=11;fontColor=#333333;rounded=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="20" y="90" width="270" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="" style="endArrow=block;endFill=1;strokeColor=#e74c3c;strokeWidth=2.5;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="4">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="12" y="42" as="sourcePoint"/><mxPoint x="52" y="42" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="6" value="Attack traffic (SMB · SSH · Kerberos · LDAP)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#333333;align=left;" vertex="1" parent="4">
+      <mxGeometry x="58" y="34" width="205" height="16" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="" style="endArrow=block;endFill=1;strokeColor=#3498db;strokeWidth=2;" edge="1" parent="4">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="12" y="62" as="sourcePoint"/><mxPoint x="52" y="62" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="8" value="Host telemetry (Splunk Universal Forwarder)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#333333;align=left;" vertex="1" parent="4">
+      <mxGeometry x="58" y="54" width="205" height="16" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="" style="endArrow=block;endFill=1;strokeColor=#8e44ad;strokeWidth=2;" edge="1" parent="4">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="12" y="82" as="sourcePoint"/><mxPoint x="52" y="82" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="10" value="Wazuh EDR agent telemetry" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#333333;align=left;" vertex="1" parent="4">
+      <mxGeometry x="58" y="74" width="205" height="16" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="" style="endArrow=block;endFill=1;strokeColor=#27ae60;strokeWidth=2;" edge="1" parent="4">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="12" y="102" as="sourcePoint"/><mxPoint x="52" y="102" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="12" value="Wazuh Manager → Splunk (HEC)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#333333;align=left;" vertex="1" parent="4">
+      <mxGeometry x="58" y="94" width="205" height="16" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="" style="endArrow=open;endFill=0;strokeColor=#555555;strokeWidth=1.5;dashed=1;" edge="1" parent="4">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="12" y="122" as="sourcePoint"/><mxPoint x="52" y="122" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="14" value="Admin / analyst access" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#333333;align=left;" vertex="1" parent="4">
+      <mxGeometry x="58" y="114" width="205" height="16" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════ PROXMOX MAIN BOX ═══════════════════════════════════ -->
+    <mxCell id="20" value="&lt;b style=&quot;font-size:11px;color:#9b7d00;&quot;&gt;PROXMOX HOME LAB — pve1  |  Intel i5-4570  ·  31 GB RAM  ·  3.5 TB HDD&lt;/b&gt;" style="swimlane;startSize=28;fillColor=#fffbf0;strokeColor=#d4b000;strokeWidth=2.5;rounded=1;arcSize=2;fontSize=11;fontColor=#9b7d00;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="20" y="235" width="1180" height="640" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════ ATTACKER VLAN ZONE ══════════════════════════════════ -->
+    <mxCell id="21" value="&lt;b&gt;ATTACKER VLAN&lt;/b&gt;&lt;br/&gt;vmbr2  ·  192.168.20.0/24" style="swimlane;startSize=40;fillColor=#feefee;strokeColor=#e74c3c;strokeWidth=1.5;rounded=1;arcSize=3;fontSize=9;fontColor=#c0392b;align=center;fontStyle=1;" vertex="1" parent="20">
+      <mxGeometry x="15" y="35" width="170" height="590" as="geometry" />
+    </mxCell>
+
+    <!-- Kali Linux -->
+    <mxCell id="22" value="&lt;b style=&quot;font-size:13px;&quot;&gt;🐉&lt;/b&gt;&lt;br/&gt;&lt;b&gt;Kali Linux&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#ffcccc&quot;&gt;VM 202 — voldemort&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#ffcccc&quot;&gt;192.168.20.100&lt;/font&gt;&lt;br/&gt;&lt;hr/&gt;&lt;font color=&quot;#ffe0e0&quot;&gt;NetExec · Hydra&lt;br/&gt;Impacket · Nmap&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e74c3c;strokeColor=#c0392b;strokeWidth=2;fontColor=#ffffff;fontSize=10;arcSize=8;align=center;verticalAlign=middle;" vertex="1" parent="21">
+      <mxGeometry x="10" y="200" width="150" height="185" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════ OPNSENSE ══════════════════════════════════════════ -->
+    <mxCell id="23" value="&lt;b style=&quot;font-size:16px;&quot;&gt;🛡️&lt;/b&gt;&lt;br/&gt;&lt;b&gt;OPNsense&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#880044&quot;&gt;VM 201 · 192.168.10.1&lt;/font&gt;&lt;br/&gt;&lt;hr/&gt;&lt;font color=&quot;#880044&quot;&gt;Firewall&lt;br/&gt;Suricata IDS&lt;br/&gt;ET Open Rulesets&lt;br/&gt;syslog → Splunk&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde8f5;strokeColor=#e84393;strokeWidth=2.5;fontColor=#440022;fontSize=10;arcSize=8;align=center;verticalAlign=middle;" vertex="1" parent="20">
+      <mxGeometry x="205" y="240" width="140" height="170" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════ LAB LAN ZONE ══════════════════════════════════════ -->
+    <mxCell id="24" value="&lt;b&gt;LAB LAN&lt;/b&gt;&lt;br/&gt;vmbr1  ·  192.168.10.0/24" style="swimlane;startSize=40;fillColor=#eef5ff;strokeColor=#3498db;strokeWidth=1.5;rounded=1;arcSize=3;fontSize=9;fontColor=#1a6aa8;align=center;fontStyle=1;" vertex="1" parent="20">
+      <mxGeometry x="370" y="35" width="400" height="590" as="geometry" />
+    </mxCell>
+
+    <!-- win-target -->
+    <mxCell id="25" value="&lt;b style=&quot;font-size:14px;&quot;&gt;🖥️&lt;/b&gt;&lt;br/&gt;&lt;b&gt;win-target&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#cce0ff&quot;&gt;VM 207  ·  192.168.10.10&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#cce0ff&quot;&gt;Windows Server 2025&lt;/font&gt;&lt;br/&gt;&lt;hr/&gt;&lt;font color=&quot;#e0eeff&quot;&gt;Sysmon 15.20  ·  Wazuh Agent  ·  Splunk UF&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2980b9;strokeColor=#1a5276;strokeWidth=2;fontColor=#ffffff;fontSize=10;arcSize=6;align=center;verticalAlign=middle;" vertex="1" parent="24">
+      <mxGeometry x="15" y="55" width="370" height="155" as="geometry" />
+    </mxCell>
+
+    <!-- win-dc -->
+    <mxCell id="26" value="&lt;b style=&quot;font-size:14px;&quot;&gt;🖥️&lt;/b&gt;&lt;br/&gt;&lt;b&gt;win-dc  &lt;font color=&quot;#aaccff&quot;&gt;(soclab.local DC)&lt;/font&gt;&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#cce0ff&quot;&gt;VM 208  ·  192.168.10.11&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#cce0ff&quot;&gt;Windows Server 2025&lt;/font&gt;&lt;br/&gt;&lt;hr/&gt;&lt;font color=&quot;#e0eeff&quot;&gt;Sysmon 15.20  ·  Wazuh Agent  ·  Splunk UF&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a6aa8;strokeColor=#154360;strokeWidth=2;fontColor=#ffffff;fontSize=10;arcSize=6;align=center;verticalAlign=middle;" vertex="1" parent="24">
+      <mxGeometry x="15" y="225" width="370" height="155" as="geometry" />
+    </mxCell>
+
+    <!-- purple-voldemort -->
+    <mxCell id="27" value="&lt;b style=&quot;font-size:14px;&quot;&gt;🐧&lt;/b&gt;&lt;br/&gt;&lt;b&gt;purple-voldemort&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#e0ccff&quot;&gt;VM 203  ·  192.168.10.181&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#e0ccff&quot;&gt;Kali Purple — SSH target&lt;/font&gt;&lt;br/&gt;&lt;hr/&gt;&lt;font color=&quot;#eeddff&quot;&gt;rsyslog  ·  Wazuh Agent  ·  Splunk UF&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7d3c98;strokeColor=#5b2c6f;strokeWidth=2;fontColor=#ffffff;fontSize=10;arcSize=6;align=center;verticalAlign=middle;" vertex="1" parent="24">
+      <mxGeometry x="15" y="395" width="370" height="155" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════ VM 206 SIEM ZONE ══════════════════════════════════ -->
+    <mxCell id="28" value="&lt;b&gt;VM 206  ·  192.168.10.50&lt;/b&gt;" style="swimlane;startSize=32;fillColor=#f0fff8;strokeColor=#27ae60;strokeWidth=1.5;rounded=1;arcSize=3;fontSize=10;fontColor=#1e8449;align=center;fontStyle=1;" vertex="1" parent="20">
+      <mxGeometry x="795" y="35" width="370" height="590" as="geometry" />
+    </mxCell>
+
+    <!-- Wazuh Manager -->
+    <mxCell id="29" value="&lt;b style=&quot;font-size:14px;&quot;&gt;🔐&lt;/b&gt;&lt;br/&gt;&lt;b&gt;Wazuh Manager&lt;/b&gt;&lt;br/&gt;&lt;hr/&gt;&lt;font color=&quot;#ddd0ff&quot;&gt;EDR alert processing&lt;br/&gt;Brute force detection&lt;br/&gt;Kerberoasting · DCSync&lt;br/&gt;Privilege escalation&lt;br/&gt;&lt;br/&gt;→ forwards via HEC&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6c5ce7;strokeColor=#4834d4;strokeWidth=2.5;fontColor=#ffffff;fontSize=10;arcSize=6;align=center;verticalAlign=middle;" vertex="1" parent="28">
+      <mxGeometry x="15" y="45" width="340" height="235" as="geometry" />
+    </mxCell>
+
+    <!-- Splunk -->
+    <mxCell id="30" value="&lt;b style=&quot;font-size:14px;&quot;&gt;📊&lt;/b&gt;&lt;br/&gt;&lt;b&gt;Splunk Enterprise 10.4&lt;/b&gt;&lt;br/&gt;&lt;hr/&gt;&lt;font color=&quot;#ccfff0&quot;&gt;Indexes:&lt;br/&gt;wineventlog · sysmon&lt;br/&gt;opnsense · wazuh&lt;br/&gt;linux_secure&lt;br/&gt;&lt;br/&gt;Web UI: :8000&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00b894;strokeColor=#00967a;strokeWidth=2.5;fontColor=#ffffff;fontSize=10;arcSize=6;align=center;verticalAlign=middle;" vertex="1" parent="28">
+      <mxGeometry x="15" y="300" width="340" height="265" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════ SOC ANALYST ════════════════════════════════════════ -->
+    <mxCell id="31" value="&lt;b style=&quot;font-size:22px;&quot;&gt;👤&lt;/b&gt;&lt;br/&gt;&lt;b&gt;SOC Analyst&lt;/b&gt;&lt;br/&gt;&lt;hr/&gt;&lt;font color=&quot;#8b6914&quot;&gt;Splunk Web :8000&lt;br/&gt;Detection Engineering&lt;br/&gt;Threat Hunting&lt;br/&gt;SPL Queries&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffbf0;strokeColor=#d4a017;strokeWidth=2.5;fontColor=#5d4800;fontSize=10;arcSize=8;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1245" y="480" width="155" height="195" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════ EDGES / ARROWS ═════════════════════════════════════ -->
+
+    <!-- Kali → OPNsense (RED attack) -->
+    <mxCell id="40" value="&lt;font color=&quot;#e74c3c&quot;&gt;&lt;b&gt;Attack traffic&lt;/b&gt;&lt;br/&gt;SMB · SSH · Kerberos · LDAP&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e74c3c;strokeWidth=3;endArrow=block;endFill=1;fontSize=9;fontColor=#e74c3c;labelBackgroundColor=#ffffff;labelBorderColor=none;" edge="1" source="22" target="23" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- OPNsense → win-target (orange allowed) -->
+    <mxCell id="41" value="&lt;font color=&quot;#e67e22&quot;&gt;Allowed flows&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e67e22;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;fontSize=9;fontColor=#e67e22;labelBackgroundColor=#ffffff;" edge="1" source="23" target="25" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- OPNsense → win-dc -->
+    <mxCell id="42" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e67e22;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;" edge="1" source="23" target="26" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- OPNsense → purple-vol -->
+    <mxCell id="43" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e67e22;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;" edge="1" source="23" target="27" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- OPNsense → Splunk (filterlog/Suricata) -->
+    <mxCell id="44" value="&lt;font color=&quot;#1e8449&quot;&gt;filterlog + Suricata alerts&lt;br/&gt;index=opnsense&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1e8449;strokeWidth=2;endArrow=block;endFill=1;fontSize=9;fontColor=#1e8449;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0.5;entryY=0;" edge="1" source="23" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="275" y="220" /><mxPoint x="1165" y="220" /></Array></mxGeometry>
+    </mxCell>
+
+    <!-- win-target → Wazuh (purple) -->
+    <mxCell id="45" value="&lt;font color=&quot;#8e44ad&quot;&gt;Wazuh agent&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#8e44ad;strokeWidth=2;endArrow=block;endFill=1;fontSize=9;fontColor=#8e44ad;labelBackgroundColor=#ffffff;" edge="1" source="25" target="29" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- win-dc → Wazuh (purple) -->
+    <mxCell id="46" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#8e44ad;strokeWidth=2;endArrow=block;endFill=1;" edge="1" source="26" target="29" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- purple-vol → Wazuh (purple) -->
+    <mxCell id="47" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#8e44ad;strokeWidth=2;endArrow=block;endFill=1;" edge="1" source="27" target="29" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- win-target → Splunk UF (blue) -->
+    <mxCell id="48" value="&lt;font color=&quot;#3498db&quot;&gt;Sysmon + Security log&lt;br/&gt;Splunk UF → wineventlog/sysmon&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#3498db;strokeWidth=2;endArrow=block;endFill=1;fontSize=9;fontColor=#3498db;labelBackgroundColor=#ffffff;" edge="1" source="25" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- win-dc → Splunk UF (blue) -->
+    <mxCell id="49" value="&lt;font color=&quot;#3498db&quot;&gt;DC Security log (4768·4769·4662)&lt;br/&gt;Splunk UF → wineventlog/sysmon&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#3498db;strokeWidth=2;endArrow=block;endFill=1;fontSize=9;fontColor=#3498db;labelBackgroundColor=#ffffff;" edge="1" source="26" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- purple-vol → Splunk UF (blue) -->
+    <mxCell id="50" value="&lt;font color=&quot;#3498db&quot;&gt;auth.log → linux_secure&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#3498db;strokeWidth=2;endArrow=block;endFill=1;fontSize=9;fontColor=#3498db;labelBackgroundColor=#ffffff;" edge="1" source="27" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Wazuh → Splunk HEC (green) -->
+    <mxCell id="51" value="&lt;font color=&quot;#27ae60&quot;&gt;&lt;b&gt;HEC forward&lt;/b&gt;&lt;br/&gt;index=wazuh&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#27ae60;strokeWidth=2.5;endArrow=block;endFill=1;fontSize=9;fontColor=#27ae60;labelBackgroundColor=#ffffff;" edge="1" source="29" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- SOC Analyst ↔ Splunk (dashed admin) -->
+    <mxCell id="52" value="&lt;font color=&quot;#555555&quot;&gt;Splunk Web UI&lt;br/&gt;http://192.168.10.50:8000&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#555555;strokeWidth=1.5;endArrow=open;startArrow=open;startFill=0;endFill=0;dashed=1;dashPattern=8 4;fontSize=9;fontColor=#555555;labelBackgroundColor=#ffffff;" edge="1" source="31" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>
