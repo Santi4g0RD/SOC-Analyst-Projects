@@ -1,0 +1,156 @@
+<dashboard version="1.1" theme="dark">
+  <label>SOC Overview — Credential Attack Detection</label>
+  <description>Windows (wineventlog) and Linux (linux_secure) authentication monitoring — failed logons, account targeting, and brute force / password spray signal, side by side.</description>
+
+  <row>
+    <panel>
+      <title>Windows Failed Logons (24h)</title>
+      <single>
+        <search>
+          <query>index=wineventlog EventCode=4625 | stats count</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+        <option name="rangeValues">[10,30]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Linux SSH Failed Logons (24h)</title>
+      <single>
+        <search>
+          <query>index=linux_secure sshd ("Failed password" OR "Invalid user")
+| stats count</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+        <option name="rangeValues">[10,30]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Windows Unique Accounts Targeted (24h)</title>
+      <single>
+        <search>
+          <query>index=wineventlog EventCode=4625
+| eval username=mvindex(Account_Name, -1)
+| stats dc(username) as accounts</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
+        <option name="rangeValues">[3]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Linux Unique Accounts Targeted (24h)</title>
+      <single>
+        <search>
+          <query>index=linux_secure sshd ("Failed password" OR "Invalid user")
+| rex field=_raw "Failed password for (?:invalid user )?(?P&lt;target_user&gt;\S+) from (?P&lt;src_ip&gt;\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port"
+| rex field=_raw "Invalid user (?P&lt;invalid_user&gt;\S+) from (?P&lt;src_ip_inv&gt;\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port"
+| eval target_user=coalesce(target_user, invalid_user)
+| stats dc(target_user) as accounts</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
+        <option name="rangeValues">[3]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Windows Failed Logon Trend</title>
+      <chart>
+        <search>
+          <query>index=wineventlog EventCode=4625 | timechart span=30m count as "Failed Logons"</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.fieldColors">{"Failed Logons":0xdc4e41}</option>
+        <option name="charting.legend.placement">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Linux SSH Failed Logon Trend</title>
+      <chart>
+        <search>
+          <query>index=linux_secure sshd ("Failed password" OR "Invalid user")
+| timechart span=30m count as "Failed SSH Logons"</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.fieldColors">{"Failed SSH Logons":0xdc4e41}</option>
+        <option name="charting.legend.placement">none</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Top Targeted Windows Accounts</title>
+      <chart>
+        <search>
+          <query>index=wineventlog EventCode=4625
+| eval username=mvindex(Account_Name, -1)
+| stats count by username | sort -count | head 10</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.legend.placement">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Top Targeted Linux Accounts</title>
+      <chart>
+        <search>
+          <query>index=linux_secure sshd ("Failed password" OR "Invalid user")
+| rex field=_raw "Failed password for (?:invalid user )?(?P&lt;target_user&gt;\S+) from (?P&lt;src_ip&gt;\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port"
+| rex field=_raw "Invalid user (?P&lt;invalid_user&gt;\S+) from (?P&lt;src_ip_inv&gt;\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port"
+| eval target_user=coalesce(target_user, invalid_user)
+| stats count by target_user | sort -count | head 10</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.legend.placement">none</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Recent Failed Windows Logons</title>
+      <table>
+        <search>
+          <query>index=wineventlog EventCode=4625
+| eval username=mvindex(Account_Name, -1)
+| sort -_time
+| table _time username Source_Network_Address Logon_Type | head 20</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Recent Failed Linux SSH Logons</title>
+      <table>
+        <search>
+          <query>index=linux_secure sshd ("Failed password" OR "Invalid user")
+| rex field=_raw "Failed password for (?:invalid user )?(?P&lt;target_user&gt;\S+) from (?P&lt;src_ip&gt;\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port"
+| rex field=_raw "Invalid user (?P&lt;invalid_user&gt;\S+) from (?P&lt;src_ip_inv&gt;\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port"
+| eval target_user=coalesce(target_user, invalid_user), src_ip=coalesce(src_ip, src_ip_inv)
+| sort -_time
+| table _time target_user src_ip | head 20</query>
+          <earliest>-24h</earliest><latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

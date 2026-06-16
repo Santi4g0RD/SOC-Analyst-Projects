@@ -11,6 +11,14 @@ Runs on top of the [lab infrastructure](../lab-infrastructure/) — OPNsense fir
 
 ---
 
+## SOC Overview Dashboard
+
+![SOC Overview dashboard — Windows and Linux failed logons, side by side](dashboards/soc-overview-dashboard.png)
+
+A single pane of glass over both attack surfaces (`dashboards/soc_overview.xml`): color-thresholded KPI tiles for failed logons and unique accounts targeted, failed-logon trend charts, top-targeted-account bar charts, and live triage tables — built from the same SPL used in the validated detections below.
+
+---
+
 ## Goal
 
 Simulate brute force and password spray attacks against a Windows host and a Linux host, then write and validate Splunk detections that tell the two attack patterns apart — even when both come from the same attacker IP.
