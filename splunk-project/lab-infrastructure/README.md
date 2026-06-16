@@ -125,6 +125,11 @@ OPNsense sits at the boundary of all three networks. The attacker VLAN (`vmbr2`)
                        ║    Detection Engineering      ║
                        ║      Threat Hunting           ║
                        ╚══════════════════════════════╝
+
+                                                    ___  __   _  _  _____ ___ 
+                                                   / __||  | | \| ||_   _|_ _|
+                                                   \__ \| || | .` | | |  | | 
+                                                   |___/|__/ |_|\_| |_| |___|
 ```
 
 ---
