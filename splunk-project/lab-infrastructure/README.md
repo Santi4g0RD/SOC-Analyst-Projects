@@ -46,7 +46,52 @@ This is the platform everything else in this portfolio runs on: a self-hosted Pr
 └─────────────────────────┘                  └──────────────────────────┘
 ```
 
-OPNsense sits at the boundary of all three networks. The attacker VLAN (`vmbr2`) only reaches the lab LAN (`vmbr1`) through firewall rules that are explicitly scoped and logged — every attack in this portfolio crosses that boundary and shows up in `index=opnsense` filterlog, even though those firewall-layer detections haven't been built out yet (see [`future-work/`](../future-work/)).
+OPNsense sits at the boundary of all three networks. The attacker VLAN (`vmbr2`) only reaches the lab LAN (`vmbr1`) through firewall rules that are explicitly scoped and logged — every attack in this portfolio crosses that boundary and shows up in `index=opnsense` filterlog.
+
+---
+
+## Detection Data Flow
+
+```mermaid
+flowchart TB
+    classDef attacker fill:#e17055,color:#fff,stroke:#d63031,stroke-width:2px
+    classDef winTarget fill:#74b9ff,color:#000,stroke:#0984e3,stroke-width:2px
+    classDef linuxTarget fill:#a29bfe,color:#000,stroke:#6c5ce7,stroke-width:2px
+    classDef firewall fill:#fd79a8,color:#000,stroke:#e84393,stroke-width:2px
+    classDef siem fill:#00b894,color:#fff,stroke:#00cec9,stroke-width:2px
+    classDef analyst fill:#fdcb6e,color:#000,stroke:#e17055,stroke-width:2px
+
+    subgraph PROXMOX["Proxmox Host — pve1  |  Intel i5-4570  ·  31 GB RAM  ·  3.5 TB HDD"]
+        direction TB
+
+        subgraph VLAN2["Attacker VLAN — vmbr2  |  192.168.20.0/24"]
+            KALI["Kali Linux\nVM 202 — voldemort\n192.168.20.100\n---\nNetExec · Hydra\nImpacket · Nmap"]:::attacker
+        end
+
+        subgraph LAN["Lab LAN — vmbr1  |  192.168.10.0/24"]
+            OPN["OPNsense\nVM 201 — 192.168.10.1\n---\nFirewall · Suricata IDS\nET Open Rulesets"]:::firewall
+
+            subgraph TARGETS["Targets"]
+                WINDC["win-dc\nVM 208 — 192.168.10.11\nsoclab.local DC\n---\nSysmon 15.20\nWazuh Agent · Splunk UF"]:::winTarget
+                WINTGT["win-target\nVM 207 — 192.168.10.10\nWindows Server 2025\n---\nSysmon 15.20\nSplunk UF"]:::winTarget
+                LINUX["purple-voldemort\nVM 203 — 192.168.10.181\nKali Purple — SSH target\n---\nrsyslog · Splunk UF"]:::linuxTarget
+            end
+
+            SPLUNK["Splunk Enterprise 10.4  +  Wazuh Manager\nVM 206 — 192.168.10.50\n---\nIndexes: wineventlog · sysmon · opnsense · wazuh · linux_secure"]:::siem
+        end
+    end
+
+    ANALYST["SOC Analyst\n---\nSplunk Web :8000\nDetection Engineering\nThreat Hunting"]:::analyst
+
+    KALI -->|"Attack traffic\nSMB · SSH · Kerberos · LDAP"| OPN
+    OPN -->|"filterlog + Suricata alerts\nindex=opnsense"| SPLUNK
+    OPN -->|"Allowed flows"| WINTGT & WINDC & LINUX
+    WINTGT -->|"Sysmon EC 1·10·11·13\nSecurity log 4625·4698·1102\nindex=sysmon / wineventlog"| SPLUNK
+    WINDC -->|"Sysmon + DC Security log\n4768·4769·4662·4625\nindex=sysmon / wineventlog"| SPLUNK
+    WINDC -->|"Wazuh EDR alerts\nindex=wazuh"| SPLUNK
+    LINUX -->|"auth.log SSH events\nindex=linux_secure"| SPLUNK
+    ANALYST <-->|"Splunk Web UI\nhttp://192.168.10.50:8000"| SPLUNK
+```
 
 ---
 
