@@ -111,7 +111,7 @@ flowchart LR
     linkStyle 9 stroke:#2980b9,stroke-width:2px
     linkStyle 10 stroke:#2980b9,stroke-width:2px
     linkStyle 11 stroke:#27ae60,stroke-width:3px
-    linkStyle 12 stroke:#555555,stroke-width:2px,stroke-dasharray:6
+    linkStyle 12 stroke:#555555,stroke-width:2px
 ```
 
 ---
