@@ -52,66 +52,64 @@ OPNsense sits at the boundary of all three networks. The attacker VLAN (`vmbr2`)
 
 ## Detection Data Flow
 
-```mermaid
-flowchart LR
-    classDef attacker fill:#c0392b,color:#fff,stroke:#922b21,stroke-width:2px
-    classDef winTarget fill:#2471a3,color:#fff,stroke:#1a5276,stroke-width:2px
-    classDef linuxTarget fill:#7d3c98,color:#fff,stroke:#5b2c6f,stroke-width:2px
-    classDef firewall fill:#c2185b,color:#fff,stroke:#880e4f,stroke-width:2px
-    classDef siem fill:#00897b,color:#fff,stroke:#00574b,stroke-width:2px
-    classDef edr fill:#5e35b1,color:#fff,stroke:#3d1d8c,stroke-width:2px
-    classDef analyst fill:#e65100,color:#fff,stroke:#bf360c,stroke-width:2px
+```
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║                      Detection Data Flow — SOC Home Lab                          ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
 
-    subgraph PROXMOX["Proxmox Home Lab - pve1 - i5-4570 - 31GB RAM - 3.5TB"]
-
-        subgraph VLAN2["Attacker VLAN - vmbr2 - 192.168.20.0/24"]
-            KALI["Kali Linux\nVM 202 - voldemort\n192.168.20.100\nNetExec - Hydra - Impacket"]:::attacker
-        end
-
-        OPN["OPNsense\nVM 201 - 192.168.10.1\nFirewall + Suricata IDS\nET Open Rulesets"]:::firewall
-
-        subgraph LAN["Lab LAN - vmbr1 - 192.168.10.0/24"]
-            WINTGT["win-target\nVM 207 - 192.168.10.10\nWindows Server 2025\nSysmon - Wazuh Agent - Splunk UF"]:::winTarget
-            WINDC["win-dc\nVM 208 - 192.168.10.11\nsoclab.local DC\nSysmon - Wazuh Agent - Splunk UF"]:::winTarget
-            LINUX["purple-voldemort\nVM 203 - 192.168.10.181\nKali Purple - SSH target\nrsyslog - Wazuh Agent - Splunk UF"]:::linuxTarget
-        end
-
-        subgraph VM206["VM 206 - 192.168.10.50"]
-            WAZUH["Wazuh Manager\nEDR alert processing\nBrute force - Kerberoasting\nDCSync - Priv escalation"]:::edr
-            SPLUNK["Splunk Enterprise 10.4\nwineventlog - sysmon\nopnsense - wazuh\nlinux_secure"]:::siem
-        end
-
-    end
-
-    ANALYST["SOC Analyst\nSplunk Web :8000\nDetection Engineering\nThreat Hunting"]:::analyst
-
-    KALI -->|"Attack traffic"| OPN
-    OPN -->|"filterlog + Suricata"| SPLUNK
-    OPN -->|"allowed"| WINTGT
-    OPN -->|"allowed"| WINDC
-    OPN -->|"allowed"| LINUX
-    WINTGT -->|"Wazuh agent"| WAZUH
-    WINDC -->|"Wazuh agent"| WAZUH
-    LINUX -->|"Wazuh agent"| WAZUH
-    WINTGT -->|"Splunk UF"| SPLUNK
-    WINDC -->|"Splunk UF"| SPLUNK
-    LINUX -->|"Splunk UF"| SPLUNK
-    WAZUH -->|"HEC forward"| SPLUNK
-    ANALYST <-->|"Splunk Web"| SPLUNK
-
-    linkStyle 0 stroke:#e74c3c,stroke-width:3px
-    linkStyle 1 stroke:#27ae60,stroke-width:2px
-    linkStyle 2 stroke:#e67e22,stroke-width:2px
-    linkStyle 3 stroke:#e67e22,stroke-width:2px
-    linkStyle 4 stroke:#e67e22,stroke-width:2px
-    linkStyle 5 stroke:#8e44ad,stroke-width:2px
-    linkStyle 6 stroke:#8e44ad,stroke-width:2px
-    linkStyle 7 stroke:#8e44ad,stroke-width:2px
-    linkStyle 8 stroke:#2980b9,stroke-width:2px
-    linkStyle 9 stroke:#2980b9,stroke-width:2px
-    linkStyle 10 stroke:#2980b9,stroke-width:2px
-    linkStyle 11 stroke:#27ae60,stroke-width:3px
-    linkStyle 12 stroke:#555555,stroke-width:2px
+  ATTACKER VLAN · 192.168.20.0/24
+  ┌──────────────────────────────────────────────────────────┐
+  │  VM 202  ·  Kali Linux (voldemort)  ·  192.168.20.100    │
+  │  NetExec  ·  Hydra  ·  Impacket                          │
+  └──────────────────────────────┬───────────────────────────┘
+                                 │  attack traffic
+                                 ▼
+            ┌─────────────────────────────────────────────────┐
+            │  VM 201  ·  OPNsense  ·  192.168.10.1           │
+            │  Firewall  +  Suricata IDS  (ET Open rulesets)  │
+            └────────────────┬──────────────────┬─────────────┘
+                             │ allowed           │ filterlog + Suricata
+                             │ traffic           └──────────────────────────┐
+                             ▼                                              │
+  LAB LAN · 192.168.10.0/24                                               │
+  ┌──────────────────────────────────────────────────────────────────┐    │
+  │  VM 207  ·  win-target  ·  192.168.10.10                         │    │
+  │  Windows Server 2025  ·  Sysmon  ·  Wazuh Agent  ·  Splunk UF   │    │
+  ├──────────────────────────────────────────────────────────────────┤    │
+  │  VM 208  ·  win-dc  ·  192.168.10.11  (soclab.local DC)          │    │
+  │  Windows Server 2025  ·  Sysmon  ·  Wazuh Agent  ·  Splunk UF   │    │
+  ├──────────────────────────────────────────────────────────────────┤    │
+  │  VM 203  ·  purple-voldemort  ·  192.168.10.181                  │    │
+  │  Kali Purple (SSH target)  ·  rsyslog  ·  Wazuh Agent  ·  UF    │    │
+  └────────────────────────┬─────────────────────────────────────────┘    │
+                           │                                               │
+               ┌───────────┴──────────────┐                               │
+         Wazuh agent               Splunk UF                              │
+               │                          │                               │
+               ▼                          │                               │
+  ┌────────────────────────┐              │                               │
+  │  Wazuh Manager         │              │                               │
+  │  VM 206  ·  .10.50     │              │                               │
+  └──────────────┬─────────┘              │                               │
+                 │ HEC → index=wazuh      │                               │
+                 └────────────────────────┼───────────────────────────────┘
+                                          ▼
+                  ┌──────────────────────────────────────────────────────────┐
+                  │  Splunk Enterprise 10.4  ·  VM 206  ·  192.168.10.50     │
+                  │                                                          │
+                  │  index=wineventlog  ·  Security + System (Splunk UF)    │
+                  │  index=sysmon       ·  Sysmon events  (Splunk UF)       │
+                  │  index=linux_secure ·  auth.log       (rsyslog + UF)    │
+                  │  index=opnsense     ·  filterlog + Suricata  (UDP 514)  │
+                  │  index=wazuh        ·  EDR alerts    (HEC)              │
+                  └──────────────────────────────────┬───────────────────────┘
+                                                     │  Splunk Web · :8000
+                                                     ▼
+                                          ┌─────────────────────────────┐
+                                          │  SOC Analyst                │
+                                          │  Detection Engineering      │
+                                          │  Threat Hunting             │
+                                          └─────────────────────────────┘
 ```
 
 ---
