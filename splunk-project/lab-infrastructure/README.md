@@ -86,18 +86,32 @@ flowchart LR
     ANALYST["SOC Analyst\nSplunk Web :8000\nDetection Engineering\nThreat Hunting"]:::analyst
 
     KALI -->|"Attack traffic"| OPN
-    OPN -->|"filterlog + Suricata\nindex=opnsense"| SPLUNK
-    OPN --> WINTGT
-    OPN --> WINDC
-    OPN --> LINUX
+    OPN -->|"filterlog + Suricata"| SPLUNK
+    OPN -->|"allowed"| WINTGT
+    OPN -->|"allowed"| WINDC
+    OPN -->|"allowed"| LINUX
     WINTGT -->|"Wazuh agent"| WAZUH
     WINDC -->|"Wazuh agent"| WAZUH
     LINUX -->|"Wazuh agent"| WAZUH
-    WINTGT -->|"Splunk UF\nwineventlog/sysmon"| SPLUNK
-    WINDC -->|"Splunk UF\nDC Security log"| SPLUNK
-    LINUX -->|"Splunk UF\nlinux_secure"| SPLUNK
-    WAZUH -->|"HEC forward\nindex=wazuh"| SPLUNK
-    ANALYST <-->|"Splunk Web :8000"| SPLUNK
+    WINTGT -->|"Splunk UF"| SPLUNK
+    WINDC -->|"Splunk UF"| SPLUNK
+    LINUX -->|"Splunk UF"| SPLUNK
+    WAZUH -->|"HEC forward"| SPLUNK
+    ANALYST <-->|"Splunk Web"| SPLUNK
+
+    linkStyle 0 stroke:#e74c3c,stroke-width:3px
+    linkStyle 1 stroke:#27ae60,stroke-width:2px
+    linkStyle 2 stroke:#e67e22,stroke-width:2px
+    linkStyle 3 stroke:#e67e22,stroke-width:2px
+    linkStyle 4 stroke:#e67e22,stroke-width:2px
+    linkStyle 5 stroke:#8e44ad,stroke-width:2px
+    linkStyle 6 stroke:#8e44ad,stroke-width:2px
+    linkStyle 7 stroke:#8e44ad,stroke-width:2px
+    linkStyle 8 stroke:#2980b9,stroke-width:2px
+    linkStyle 9 stroke:#2980b9,stroke-width:2px
+    linkStyle 10 stroke:#2980b9,stroke-width:2px
+    linkStyle 11 stroke:#27ae60,stroke-width:3px
+    linkStyle 12 stroke:#555555,stroke-width:2px,stroke-dasharray:6
 ```
 
 ---
