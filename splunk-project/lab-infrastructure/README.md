@@ -74,7 +74,7 @@ flowchart TB
             subgraph TARGETS["Targets"]
                 WINDC["win-dc\nVM 208 — 192.168.10.11\nsoclab.local DC\n---\nSysmon 15.20\nWazuh Agent · Splunk UF"]:::winTarget
                 WINTGT["win-target\nVM 207 — 192.168.10.10\nWindows Server 2025\n---\nSysmon 15.20\nSplunk UF"]:::winTarget
-                LINUX["purple-voldemort\nVM 203 — 192.168.10.181\nKali Purple — SSH target\n---\nrsyslog · Splunk UF"]:::linuxTarget
+                LINUX["purple-voldemort\nVM 203 — 192.168.10.181\nKali Purple — SSH target\n---\nrsyslog · Splunk UF\nWazuh Agent"]:::linuxTarget
             end
 
             SPLUNK["Splunk Enterprise 10.4  +  Wazuh Manager\nVM 206 — 192.168.10.50\n---\nIndexes: wineventlog · sysmon · opnsense · wazuh · linux_secure"]:::siem
@@ -90,6 +90,7 @@ flowchart TB
     WINDC -->|"Sysmon + DC Security log\n4768·4769·4662·4625\nindex=sysmon / wineventlog"| SPLUNK
     WINDC -->|"Wazuh EDR alerts\nindex=wazuh"| SPLUNK
     LINUX -->|"auth.log SSH events\nindex=linux_secure"| SPLUNK
+    LINUX -->|"Wazuh EDR alerts\nindex=wazuh"| SPLUNK
     ANALYST <-->|"Splunk Web UI\nhttp://192.168.10.50:8000"| SPLUNK
 ```
 
