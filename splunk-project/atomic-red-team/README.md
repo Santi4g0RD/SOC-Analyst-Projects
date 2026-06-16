@@ -19,8 +19,17 @@ Stand up Sysmon on an existing detection lab target, wire it into Splunk, and us
 
 ## Setup — Sysmon + Splunk Pipeline
 
-1. Installed Sysmon 15.20 with the [SwiftOnSecurity](https://github.com/SwiftOnSecurity/sysmon-config) community config at `C:\Sysmon\sysmonconfig.xml`.
-2. Added a `[WinEventLog://Microsoft-Windows-Sysmon/Operational]` stanza to the Splunk UF's `inputs.conf`, routing to a new `sysmon` index.
+1. Installed Sysmon 15.20 on win-target, downloading the binary and the [SwiftOnSecurity](https://github.com/SwiftOnSecurity/sysmon-config) community config separately rather than relying on a bundled package:
+   ```powershell
+   Invoke-WebRequest -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile "C:\Sysmon.zip"
+   Expand-Archive -Path C:\Sysmon.zip -DestinationPath C:\Sysmon
+
+   Invoke-WebRequest -Uri "https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml" -OutFile "C:\Sysmon\sysmonconfig.xml"
+
+   cd C:\Sysmon
+   .\Sysmon64.exe -accepteula -i sysmonconfig.xml
+   ```
+2. Created a new `sysmon` index in Splunk Web (Settings → Indexes → New Index), then added a `[WinEventLog://Microsoft-Windows-Sysmon/Operational]` stanza to the Splunk UF's `inputs.conf`, routing to it.
 3. **Gotcha:** `index=sysmon` returned zero results even though Sysmon itself was logging fine (`Get-WinEvent` confirmed real events). `splunkd.log` showed `errorCode=5` (ACCESS_DENIED) when subscribing to the Sysmon channel. Root cause: the Splunk UF service runs as the virtual account `NT SERVICE\SplunkForwarder`, which isn't a member of the local "Event Log Readers" group that the Sysmon channel's ACL grants read access to. Fixed with:
    ```powershell
    Add-LocalGroupMember -Group "Event Log Readers" -Member "NT SERVICE\SplunkForwarder"
