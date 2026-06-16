@@ -53,63 +53,78 @@ OPNsense sits at the boundary of all three networks. The attacker VLAN (`vmbr2`)
 ## Detection Data Flow
 
 ```
-╔══════════════════════════════════════════════════════════════════════════════════╗
-║                      Detection Data Flow — SOC Home Lab                          ║
-╚══════════════════════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║      S O C   H O M E   L A B  —  D E T E C T I O N   D A T A   F L O W           ║
+║             Proxmox pve1  ·  Intel i5-4570  ·  31 GB RAM  ·  3.5 TB               ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
 
-  ATTACKER VLAN · 192.168.20.0/24
-  ┌──────────────────────────────────────────────────────────┐
-  │  VM 202  ·  Kali Linux (voldemort)  ·  192.168.20.100    │
-  │  NetExec  ·  Hydra  ·  Impacket                          │
-  └──────────────────────────────┬───────────────────────────┘
-                                 │  attack traffic
-                                 ▼
-            ┌─────────────────────────────────────────────────┐
-            │  VM 201  ·  OPNsense  ·  192.168.10.1           │
-            │  Firewall  +  Suricata IDS  (ET Open rulesets)  │
-            └────────────────┬──────────────────┬─────────────┘
-                             │ allowed           │ filterlog + Suricata
-                             │ traffic           └──────────────────────────┐
-                             ▼                                              │
-  LAB LAN · 192.168.10.0/24                                               │
-  ┌──────────────────────────────────────────────────────────────────┐    │
-  │  VM 207  ·  win-target  ·  192.168.10.10                         │    │
-  │  Windows Server 2025  ·  Sysmon  ·  Wazuh Agent  ·  Splunk UF   │    │
-  ├──────────────────────────────────────────────────────────────────┤    │
-  │  VM 208  ·  win-dc  ·  192.168.10.11  (soclab.local DC)          │    │
-  │  Windows Server 2025  ·  Sysmon  ·  Wazuh Agent  ·  Splunk UF   │    │
-  ├──────────────────────────────────────────────────────────────────┤    │
-  │  VM 203  ·  purple-voldemort  ·  192.168.10.181                  │    │
-  │  Kali Purple (SSH target)  ·  rsyslog  ·  Wazuh Agent  ·  UF    │    │
-  └────────────────────────┬─────────────────────────────────────────┘    │
-                           │                                               │
-               ┌───────────┴──────────────┐                               │
-         Wazuh agent               Splunk UF                              │
-               │                          │                               │
-               ▼                          │                               │
-  ┌────────────────────────┐              │                               │
-  │  Wazuh Manager         │              │                               │
-  │  VM 206  ·  .10.50     │              │                               │
-  └──────────────┬─────────┘              │                               │
-                 │ HEC → index=wazuh      │                               │
-                 └────────────────────────┼───────────────────────────────┘
-                                          ▼
-                  ┌──────────────────────────────────────────────────────────┐
-                  │  Splunk Enterprise 10.4  ·  VM 206  ·  192.168.10.50     │
-                  │                                                          │
-                  │  index=wineventlog  ·  Security + System (Splunk UF)    │
-                  │  index=sysmon       ·  Sysmon events  (Splunk UF)       │
-                  │  index=linux_secure ·  auth.log       (rsyslog + UF)    │
-                  │  index=opnsense     ·  filterlog + Suricata  (UDP 514)  │
-                  │  index=wazuh        ·  EDR alerts    (HEC)              │
-                  └──────────────────────────────────┬───────────────────────┘
-                                                     │  Splunk Web · :8000
-                                                     ▼
-                                          ┌─────────────────────────────┐
-                                          │  SOC Analyst                │
-                                          │  Detection Engineering      │
-                                          │  Threat Hunting             │
-                                          └─────────────────────────────┘
+  ╔═══════════════════════════════════════════════════════════════════════════════╗
+  ║  ATTACKER VLAN  ·  vmbr2  ·  192.168.20.0/24                                 ║
+  ╠═══════════════════════════════════════════════════════════════════════════════╣
+  ║   ┌───────────────────────────────────────────────────────────────────────┐  ║
+  ║   │  VM 202  ·  Kali Linux  (voldemort)  ·  192.168.20.100               │  ║
+  ║   │  NetExec  ·  Hydra  ·  Impacket  (GetUserSPNs / secretsdump)         │  ║
+  ║   └─────────────────────────────────────┬─────────────────────────────────┘  ║
+  ╚═════════════════════════════════════════╬═════════════════════════════════════╝
+                                            │  attack traffic
+                                            ▼
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  VM 201  ·  OPNsense  ·  192.168.10.1  ·  vmbr0 / vmbr1 / vmbr2            │
+  │  Firewall  ·  Suricata IDS  (ET Open rulesets, PCAP mode)                   │
+  └──────────────────────┬──────────────────────────────────┬────────────────────┘
+                         │ allowed traffic                   │
+             SSH(22)  SMB(445)  RDP(3389)          filterlog + Suricata
+          Kerberos(88)  LDAP(389)  DNS(53)         → UDP 514 → index=opnsense
+                         │                                   │
+                         ▼                                   │
+  ╔═══════════════════════════════════════════════════════╗  │
+  ║  LAB LAN  ·  vmbr1  ·  192.168.10.0/24               ║  │
+  ╠═══════════════════════════════════════════════════════╣  │
+  ║  ┌─────────────────────────────────────────────────┐  ║  │
+  ║  │  VM 207  ·  win-target  ·  192.168.10.10        │  ║  │
+  ║  │  Windows Server 2025                            │  ║  │
+  ║  │  Sysmon  ·  Wazuh Agent  ·  Splunk UF           │  ║  │
+  ║  ├─────────────────────────────────────────────────┤  ║  │
+  ║  │  VM 208  ·  win-dc  ·  192.168.10.11            │  ║  │
+  ║  │  soclab.local DC  ·  Windows Server 2025        │  ║  │
+  ║  │  Sysmon  ·  Wazuh Agent  ·  Splunk UF           │  ║  │
+  ║  ├─────────────────────────────────────────────────┤  ║  │
+  ║  │  VM 203  ·  purple-voldemort  ·  192.168.10.181 │  ║  │
+  ║  │  Kali Purple (SSH target)                       │  ║  │
+  ║  │  rsyslog  ·  Wazuh Agent  ·  Splunk UF          │  ║  │
+  ║  └──────────────────┬──────────────────────┬───────┘  ║  │
+  ║                     │  Wazuh agent          │ Splunk UF║  │
+  ╚═════════════════════╬══════════════════════╬═══════════╝  │
+                        │                      │              │
+                        ▼                      │              │
+  ┌─────────────────────────────────────────┐  │              │
+  │  Wazuh Manager  ·  VM 206  ·  .10.50    │  │              │
+  │  EDR alert processing                   │  │              │
+  │  brute force · Kerberoasting · DCSync   │  │              │
+  │  Windows + Linux cross-platform EDR     │  │              │
+  └──────────────────────┬──────────────────┘  │              │
+                         │  HEC                 │              │
+                         └──────────────────────┴──────────────┘
+                                                │
+                                                ▼
+  ╔══════════════════════════════════════════════════════════════════════════════╗
+  ║  Splunk Enterprise 10.4  ·  VM 206  ·  192.168.10.50                         ║
+  ╠══════════════════════════════════════════════════════════════════════════════╣
+  ║  index=wineventlog    Security + System events        ←  Splunk UF           ║
+  ║  index=sysmon         Sysmon EventCodes 1/3/7/10/11   ←  Splunk UF          ║
+  ║  index=linux_secure   SSH auth.log                    ←  rsyslog + UF       ║
+  ║  index=opnsense       filterlog + Suricata alerts     ←  OPNsense UDP 514   ║
+  ║  index=wazuh          EDR alerts                      ←  Wazuh HEC          ║
+  ╚══════════════════════════════════════════════════════════════════════════════╝
+                                      │
+                            Splunk Web · :8000
+                                      │
+                                      ▼
+                       ╔══════════════════════════════╗
+                       ║        SOC Analyst            ║
+                       ║    Detection Engineering      ║
+                       ║      Threat Hunting           ║
+                       ╚══════════════════════════════╝
 ```
 
 ---
