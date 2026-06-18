@@ -1,0 +1,2 @@
+index=wineventlog ComputerName="win-dc.soclab.local" EventCode=4768
+| table _time, Client_Address, Account_Name, Result_Code

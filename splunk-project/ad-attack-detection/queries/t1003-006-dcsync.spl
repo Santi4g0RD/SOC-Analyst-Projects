@@ -1,0 +1,3 @@
+index=wineventlog ComputerName="win-dc.soclab.local" EventCode=4662
+| search Properties="*1131f6aa*" OR Properties="*1131f6ab*"
+| table _time, Account_Name, Properties, Object_Type

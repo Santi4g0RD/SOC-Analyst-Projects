@@ -1,0 +1,3 @@
+index=wineventlog ComputerName="win-dc.soclab.local" EventCode=4769
+| where Client_Address!="::1"
+| table _time, Account_Name, Client_Address, Ticket_Encryption_Type, Service_Name

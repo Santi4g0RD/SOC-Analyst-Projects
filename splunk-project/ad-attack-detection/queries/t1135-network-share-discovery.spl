@@ -1,0 +1,4 @@
+index=wineventlog ComputerName="win-dc.soclab.local" EventCode=4624
+| eval user=mvindex(Account_Name,-1)
+| where user="jsmith"
+| table _time, user, Source_Network_Address, Logon_Type
