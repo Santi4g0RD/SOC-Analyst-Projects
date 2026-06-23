@@ -49,7 +49,7 @@ Successor to [`ad-attack-detection/`](../ad-attack-detection/) — same infrastr
   Wazuh agents  (win-dc, ws01)  ──►  wazuh   10.10.20.20   port 1514
   Splunk UF     (win-dc, ws01)  ──►  splunk  10.10.20.50   index=wineventlog
   Suricata alerts               ──►  splunk  10.10.20.50   index=opnsense
-  Zeek (OPNsense tc mirror)     ──►  splunk  10.10.20.50   index=zeek
+  Zeek (switch hardware SPAN)   ──►  splunk  10.10.20.50   index=zeek
 
   VLAN 40 — MANAGEMENT  10.10.40.0/24
   pve1 10.10.40.201 · pve2 10.10.40.202 · desk1 10.10.40.102 · desk2 10.10.40.103
