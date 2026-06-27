@@ -4,7 +4,7 @@
 
 **Analyst:** Santiago Abel Ruiz Diaz
 **Platform:** Wazuh 4.12.0 EDR · Splunk Enterprise 10.4.0 · OPNsense Suricata (ET Open) · Zeek NSM
-**Status:** In progress — phases 1–3 complete, phases 4–7 pending
+**Status:** Complete — full attack chain simulated and validated across four detection layers
 **MITRE Coverage:** T1046 · T1087.002 · T1110.003 · T1021.001 · T1098 · T1558.003 · T1003.006 · T1053.005 · T1547.001 · T1059.001 · T1027 · T1558.001
 
 A two-hop ACL privilege escalation chain against a live Active Directory domain. Starting with no credentials, the attacker discovers a misconfigured GenericWrite ACL through BloodHound, weaponizes it via targeted Kerberoasting, and escalates to full domain compromise via DCSync. Ends with a multi-technique persistence phase covering scheduled tasks, registry run keys, obfuscated PowerShell, and a Golden Ticket.
@@ -91,14 +91,14 @@ agarcia  ──GenericWrite──►  mbrown  ──DS-Replication──►  Dom
 | 1.2 | User enumeration (RID brute / anon LDAP) | T1087.002 | ✅ |
 | 2.1 | Password spray → agarcia | T1110.003 | ✅ |
 | 3.1 | RDP lateral movement to ws01 as agarcia | T1021.001 | ✅ |
-| 4.1 | BloodHound — ACL path discovery | T1087.002 | ⏳ |
-| 5.1 | GenericWrite → add SPN to mbrown → Kerberoast | T1098 / T1558.003 | ⏳ |
-| 5.2 | Offline hash crack (hashcat -m 13100) | T1110.002 | ⏳ |
-| 6.1 | DCSync as mbrown | T1003.006 | ⏳ |
-| 7.1 | Scheduled task persistence | T1053.005 | ⏳ |
-| 7.2 | Registry run key | T1547.001 | ⏳ |
-| 7.3 | Obfuscated PowerShell | T1059.001 + T1027 | ⏳ |
-| 7.4 | Golden Ticket | T1558.001 | ⏳ |
+| 4.1 | BloodHound — ACL path discovery | T1087.002 | ✅ |
+| 5.1 | GenericWrite → add SPN to mbrown → Kerberoast | T1098 / T1558.003 | ✅ |
+| 5.2 | Offline hash crack (hashcat -m 13100) | T1110.002 | ✅ |
+| 6.1 | DCSync as mbrown | T1003.006 | ✅ |
+| 7.1 | Scheduled task persistence | T1053.005 | ✅ |
+| 7.2 | Registry run key | T1547.001 | ✅ |
+| 7.3 | Obfuscated PowerShell | T1059.001 + T1027 | ✅ |
+| 7.4 | Golden Ticket | T1558.001 | ✅ |
 
 ---
 
