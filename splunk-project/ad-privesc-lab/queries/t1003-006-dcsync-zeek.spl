@@ -1,0 +1,9 @@
+index=zeek sourcetype=zeek_json
+| spath input=_raw
+| search "id.orig_h"="10.10.10.10" "id.resp_h"="10.10.10.11"
+| table _time, "id.orig_h", "id.resp_h", "id.resp_p", service
+| sort -_time
+| head 30
+
+| where 'id.resp_p' > 49151
+| eval dynamic_rpc_from_workstation="ALERT - DCSync candidate"

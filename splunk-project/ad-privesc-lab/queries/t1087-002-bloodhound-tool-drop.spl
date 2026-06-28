@@ -1,0 +1,4 @@
+index=wineventlog ComputerName="ws01.soclab.local" EventCode=11
+| search TargetFilename="*SharpHound*"
+| table _time, Image, TargetFilename
+| sort _time

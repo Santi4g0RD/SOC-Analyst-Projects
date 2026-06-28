@@ -196,6 +196,8 @@ Hash obtained: `$krb5tgs$18$` — AES256 (etype 18). The classic `Ticket_Encrypt
 
 **Key finding:** The standard Kerberoasting SPL rule (`Ticket_Encryption_Type=0x17`) completely misses AES256 tickets. Correct detection: filter any 4769 where `Client_Address!="::1"` regardless of encryption type. Suricata's Priority 1 CISA_KEV alert fired before Splunk processed the event — network-layer detection is the faster and more reliable signal here.
 
+**Topology note — why Suricata fires here but not in `ad-privesc-lab`:** In this lab (v1 flat network), Kali sits on `vmbr2` (192.168.20.x) and win-dc sits on `vmbr1` (192.168.10.x). The Kerberoasting TGS-REQ crosses the OPNsense firewall between those two bridges, so Suricata sees it and fires SID 2019922. In the redesigned VLAN lab (`ad-privesc-lab`), the attack runs from ws01 (VLAN 10) to win-dc (VLAN 10) — the same VLAN, never touching OPNsense. Suricata is blind to intra-VLAN Kerberos traffic regardless of the signature. Same technique, opposite Suricata coverage — determined entirely by network topology.
+
 [Kali output](screenshots/4-2-kali-kerberoasting.png) · [Wazuh proof](screenshots/4-2-wazuh-kerberoasting.png) · [Splunk proof](screenshots/4-2-splunk-kerberoasting.png) · [Suricata proof](screenshots/4-2-suricata-kerberoasting.png) · [`t1558-003-kerberoasting.spl`](queries/t1558-003-kerberoasting.spl)
 
 ---

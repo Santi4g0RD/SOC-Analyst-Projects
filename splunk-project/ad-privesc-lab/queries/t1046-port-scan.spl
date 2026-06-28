@@ -1,0 +1,8 @@
+index=opnsense sourcetype=syslog "10.10.30.100"
+| eval f=split(_raw, ",")
+| eval src_ip=mvindex(f, 18), dst_ip=mvindex(f, 19), dst_port=mvindex(f, 21)
+| where src_ip="10.10.30.100"
+| bucket _time span=1m
+| stats dc(dst_port) as unique_ports by _time, src_ip, dst_ip
+| where unique_ports > 100
+| sort -unique_ports

@@ -1,0 +1,5 @@
+index=wineventlog ComputerName="win-dc.soclab.local" (EventCode=4624 OR EventCode=4625)
+| search Account_Name="ANONYMOUS LOGON"
+| table _time, EventCode, Account_Name, IpAddress, Logon_Type
+| sort -_time
+| head 10

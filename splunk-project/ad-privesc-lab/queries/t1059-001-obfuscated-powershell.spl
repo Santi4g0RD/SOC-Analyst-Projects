@@ -1,0 +1,5 @@
+index=wineventlog ComputerName="ws01.soclab.local" EventCode=4104
+| search Message="*DownloadString*" OR Message="*WebClient*" OR Message="*IEX*" OR Message="*FromBase64String*"
+| table _time, Message
+| sort -_time
+| head 5

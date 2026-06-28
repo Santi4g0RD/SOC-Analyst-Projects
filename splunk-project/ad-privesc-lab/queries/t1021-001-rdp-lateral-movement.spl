@@ -1,0 +1,5 @@
+index=wineventlog ComputerName="ws01.soclab.local" EventCode=4624
+| where Logon_Type=10
+| table _time, Account_Name, IpAddress, Logon_Type
+| sort -_time
+| head 10

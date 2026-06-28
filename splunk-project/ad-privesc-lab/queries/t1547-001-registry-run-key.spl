@@ -1,0 +1,4 @@
+index=wineventlog ComputerName="ws01.soclab.local" EventCode=13
+| search TargetObject="*CurrentVersion\\Run*"
+| table _time, Image, TargetObject, Details
+| sort -_time

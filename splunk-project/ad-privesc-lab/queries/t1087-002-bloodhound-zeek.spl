@@ -1,0 +1,8 @@
+index=zeek sourcetype=zeek_json
+| spath input=_raw
+| search "id.orig_h"="10.10.10.10" "id.resp_h"="10.10.10.11"
+| table _time, "id.orig_h", "id.resp_h", "id.resp_p", service
+| head 20
+
+| eval bloodhound_indicator=if(in('id.resp_p', "3268", "389", "445", "135", "636"), "yes", "no")
+| where bloodhound_indicator="yes"

@@ -1,0 +1,4 @@
+index=wineventlog ComputerName="ws01.soclab.local" EventCode=4698
+| table _time, Account_Name, Task_Name, Task_Content
+| sort -_time
+| head 5

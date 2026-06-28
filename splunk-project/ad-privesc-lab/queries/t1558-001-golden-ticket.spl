@@ -1,0 +1,8 @@
+index=wineventlog ComputerName="win-dc.soclab.local" (EventCode=4624 OR EventCode=4672)
+| where IpAddress="10.10.30.100" OR match(Account_Name, "Administrator")
+| table _time, EventCode, Account_Name, Logon_Type, IpAddress
+| sort -_time
+| head 10
+
+| search EventCode=4624 Logon_Type=3 Account_Name="Administrator"
+| eval golden_ticket_suspect="Confirm no 4768 from same source in preceding 5 minutes"

@@ -456,7 +456,7 @@ index=wineventlog ComputerName="win-dc.soclab.local" EventCode=4769
 
 Detected. **EventCode 4769 at 16:10:36** — `agarcia@SOCLAB.LOCAL` from ws01 (`::ffff:10.10.10.10`) requesting a ticket for `mbrown` with **Ticket_Encryption_Type=0x17** (RC4_HMAC). Every other 4769 in the log uses `0x12` (AES256) — the single RC4 row is immediately anomalous. Detection rule: `EventCode=4769 AND Ticket_Encryption_Type=0x17 AND Service_Name NOT LIKE "%$"`.
 
-**Suricata (IDS):** No alert. Kerberoasting is intra-VLAN — never routes through OPNsense.
+**Suricata (IDS):** No alert. Kerberoasting is intra-VLAN (ws01 → win-dc, both VLAN 10) — never routes through OPNsense so Suricata has no visibility. Contrast with [`ad-attack-detection`](../ad-attack-detection/) where the same technique fires a Priority 1 CISA_KEV alert (SID 2019922) because the attacker is on a separate VLAN and the TGS-REQ crosses the firewall boundary. Coverage difference is topology, not technique.
 
 **Zeek (NSM):**
 

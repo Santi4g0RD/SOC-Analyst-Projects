@@ -1,9 +1,12 @@
 # Home Lab Infrastructure
 ## Proxmox — OPNsense Firewall + Splunk SIEM
 
+> **Note — v1 Build (Superseded)**
+> This document describes the original flat-network lab (192.168.x.x, three Proxmox bridges: vmbr0/vmbr1/vmbr2). It was redesigned into a VLAN-segmented architecture (10.10.x.x, four VLANs, TL-SG108E managed switch, hardware SPAN for Zeek NSM) to support the AD attack and privilege escalation projects. The active lab runs on that newer architecture — see [`ad-privesc-lab/README.md`](../ad-privesc-lab/README.md) for the current network diagram.
+
 **Analyst:** Santiago Abel Ruiz Diaz
 **Proxmox Host:** pve1 — Intel i5-4570 @ 3.20GHz, 4 cores, 31.24 GiB RAM, 3.57 TiB HDD
-**Status:** Complete
+**Status:** Complete — v1 build (see note above)
 
 ---
 
