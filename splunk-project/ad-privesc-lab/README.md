@@ -5,7 +5,8 @@
 **Analyst:** Santiago Abel Ruiz Diaz  
 **Platform:** Wazuh 4.12.0 EDR · Splunk Enterprise 10.4.0 · OPNsense Suricata (ET Open) · Zeek NSM  
 **Status:** Complete — full attack chain simulated and validated across four detection layers  
-**MITRE Coverage:** T1046 · T1087.002 · T1110.003 · T1021.001 · T1098 · T1558.003 · T1003.006 · T1053.005 · T1547.001 · T1059.001 · T1027 · T1558.001
+**MITRE Coverage:** T1046 · T1087.002 · T1110.003 · T1021.001 · T1098 · T1558.003 · T1003.006 · T1053.005 · T1547.001 · T1059.001 · T1027 · T1558.001  
+**Incident Report:** [IR-2026-001](INCIDENT-REPORT.md) — detection timeline, root cause analysis, containment steps
 
 A two-hop ACL privilege escalation chain against a live Active Directory domain. Starting with no credentials, the attacker discovers a misconfigured GenericWrite ACL through BloodHound, weaponizes it via targeted Kerberoasting, and escalates to full domain compromise via DCSync. Ends with a multi-technique persistence phase covering scheduled tasks, registry run keys, obfuscated PowerShell, and a Golden Ticket.
 
@@ -99,6 +100,8 @@ agarcia  ──GenericWrite──►  mbrown  ──DS-Replication──►  Dom
 | 7.2 | [Registry run key](#72-registry-run-key--t1547001) | T1547.001 | ✅ Rules 92302+92041 | ✅ Sysmon EventCode 13 | ❌ | ❌ |
 | 7.3 | [Obfuscated PowerShell](#73-obfuscated-powershell--t1059001--t1027) | T1059.001 + T1027 | ✅ Rule 92027 | ✅ 4104 decoded payload | ❌ | ❌ same-node blind |
 | 7.4 | [Golden Ticket](#74-golden-ticket--t1558001) | T1558.001 | ✅ Rule 92650 lv12 | ✅ 4624+4672 no 4768 | ❌ | ✅ cifs/win-dc.soclab.local |
+
+→ **[IR-2026-001 — Full Incident Report](INCIDENT-REPORT.md):** detection timeline with timestamps, root cause analysis, affected accounts, containment steps, and recommendations.
 
 ---
 
@@ -765,5 +768,7 @@ Detected via absence pattern. **Four 4624 (Logon_Type=3) + 4672 pairs** for Admi
 
 ## Related
 
+- [`INCIDENT-REPORT.md`](INCIDENT-REPORT.md) — IR-2026-001: full incident report for this attack chain
+- [`queries/`](queries/) — all SPL detection queries as standalone `.spl` files
 - [`credential-attack-detection/`](../credential-attack-detection/) — same infrastructure, brute force and password spray across Windows SMB and Linux SSH
 - [`lab-infrastructure/`](../lab-infrastructure/) — Proxmox, OPNsense, Splunk, Wazuh build notes
