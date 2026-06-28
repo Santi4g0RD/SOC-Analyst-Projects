@@ -1,123 +1,180 @@
-# Credential Attack Detection — Windows & Linux
+# Credential Attack Detection Lab
+
 ## Detection Engineering Project
 
-**Analyst:** Santiago Abel Ruiz Diaz
-**Project ID:** SIEM-2026-0613-CRED
-**Platform:** Splunk Enterprise 10.4.0
-**Status:** Complete — both detections validated against live attack traffic
+**Analyst:** Santiago Abel Ruiz Diaz  
+**Platform:** Wazuh 4.12.0 EDR · Splunk Enterprise 10.4.0 · OPNsense Suricata (ET Open) · Zeek NSM  
+**Status:** Complete — four attack phases simulated and validated across four detection layers  
 **MITRE Coverage:** T1110.001 (Brute Force) · T1110.003 (Password Spray)
 
-Runs on top of the [lab infrastructure](../lab-infrastructure/) — OPNsense firewall, Splunk SIEM, a Windows Server 2025 target, and a Kali Purple SSH target, all isolated on a dedicated attacker VLAN.
+Brute force and password spray attacks against Windows (SMB) and Linux (SSH) targets, with detection validated across four independent layers. The lab is designed to surface the key difference between the two attack patterns — and to document exactly where each detection layer sees the attack and where it goes blind.
 
 ---
 
-## SOC Overview Dashboard
+## Lab Infrastructure
 
-![SOC Overview dashboard — Windows and Linux failed logons, side by side](dashboards/soc-overview-dashboard.png)
+```
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  SOCLAB  —  Proxmox pve1 (i5-4570, 31 GB)  +  pve2 (32 GB)        ║
+  ║  TL-SG108E managed switch  —  hardware SPAN port 8 → Zeek          ║
+  ╚══════════════════════════════════════════════════════════════════════╝
 
-A single pane of glass over both attack surfaces (`dashboards/soc_overview.xml`): color-thresholded KPI tiles for failed logons and unique accounts targeted, failed-logon trend charts, top-targeted-account bar charts, and live triage tables — built from the same SPL used in the validated detections below.
+  ╔═══════════════════════════════════════════════╗
+  ║  VLAN 30 — ATTACKERS   10.10.30.0/24         ║
+  ║  voldemort (Kali)       10.10.30.100  pve1   ║
+  ╚═══════════════════════╦═══════════════════════╝
+                          ║
+                          ▼
+  ┌─────────────────────────────────────────────┐
+  │  OPNsense  —  inter-VLAN router             │
+  │  Suricata IDS (ET Open ruleset)             │
+  └──────────╦──────────────────────╦───────────┘
+             ║                      ║
+             ▼                      ▼
+  ╔══════════════════════╗   ╔══════════════════════════════╗
+  ║  VLAN 10 — SERVERS   ║   ║  VLAN 20 — DETECTION        ║
+  ║  10.10.10.0/24       ║   ║  10.10.20.0/24               ║
+  ║                      ║   ║                              ║
+  ║  win-dc  10.10.10.11 ║   ║  splunk  10.10.20.50  pve1  ║
+  ║  pve2    soclab.local║   ║  zeek    10.10.20.30  pve1  ║
+  ║                      ║   ║  wazuh   10.10.20.20  pve2  ║
+  ║  ubuntu-vm 10.10.10.100  ╚══════════════════════════════╝
+  ║  pve2    SSH target  ║
+  ╚══════════════════════╝
 
----
-
-## Goal
-
-Simulate brute force and password spray attacks against a Windows host and a Linux host, then write and validate Splunk detections that tell the two attack patterns apart — even when both come from the same attacker IP.
-
-| Attribute | Brute Force | Password Spray |
-|---|---|---|
-| Accounts targeted | One | Many |
-| Passwords tried | Many per account | One per account |
-| Detection signal | High failure count per account | High unique-account count per source |
-| Threshold used here | `failure_count >= 10` in 5 min | `unique_accounts >= 5` in 10 min |
-
----
-
-## Windows — NetExec over SMB
-
-```bash
-# Brute force: many passwords against one account
-netexec smb 192.168.10.10 -u administrator -p ~/lab/bf-passwords.txt --local-auth
-
-# Password spray: one password against many accounts
-netexec smb 192.168.10.10 -u ~/lab/users.txt -p 'Summer2024!' --local-auth --continue-on-success --no-bruteforce
+  Four detection layers per technique:
+  Wazuh EDR  ──►  host-based alerts (Wazuh agents on win-dc, ubuntu-vm)
+  Splunk     ──►  SPL against wineventlog + linux_secure indexes
+  Suricata   ──►  network IDS at the inter-VLAN boundary (index=opnsense)
+  Zeek NSM   ──►  full traffic metadata via hardware SPAN (index=zeek)
 ```
 
-`--local-auth` is required — win-target is a workgroup machine, not domain-joined. Without it, NetExec attempts NTLM domain auth and every connection times out (this took a few rounds of troubleshooting Windows Firewall, Defender real-time protection, and account lockout before landing on the actual cause).
+---
 
-**Detection query:**
+## Targets
+
+| Host | IP | OS | Wazuh Agent | Splunk UF | Zeek Visibility |
+|---|---|---|---|---|---|
+| win-dc | 10.10.10.11 | Windows Server 2025 | ✅ v4.12.0 | ✅ wineventlog | ✅ cross-node (pve2) |
+| ubuntu-vm | 10.10.10.100 | Ubuntu 26.04 LTS | ✅ v4.14.5 | ✅ auth.log → linux_secure | ✅ cross-node (pve2) |
+
+Both targets are on pve2; Kali is on pve1. All attack traffic is cross-node — captured by Zeek's hardware SPAN — and inter-VLAN — seen by Suricata at the OPNsense boundary.
+
+---
+
+## Attack Chain
+
+| Phase | Target | Tool | Technique | MITRE |
+|---|---|---|---|---|
+| 1 | win-dc SMB | NetExec | Brute force — `administrator` + full password list | T1110.001 |
+| 2 | win-dc SMB | NetExec | Password spray — all domain users + wrong/correct password | T1110.003 |
+| 3 | ubuntu-vm SSH | Hydra | Brute force — `root` + full password list | T1110.001 |
+| 4 | ubuntu-vm SSH | Hydra | Password spray — all linux usernames + wrong password | T1110.003 |
+
+---
+
+## Detection Coverage
+
+| Phase | Technique | Wazuh | Splunk | Suricata | Zeek |
+|---|---|---|---|---|---|
+| 1 | Windows SMB brute force | ✅ Rule 60204 lv10 | ✅ EventCode 4625 burst | ❌ | ✅ gssapi,smb,ntlm burst |
+| 2 | Windows SMB spray | ✅ Rule 92652 × 3 | ✅ dc(Account_Name) ≥ 3 | ❌ | ✅ NTLM usernames from wire |
+| 3 | Linux SSH brute force | ✅ Rule 5557 lv5 | ✅ auth.log Failed password | ❌ | ✅ port 22 burst |
+| 4 | Linux SSH spray | ✅ Rule 5712 lv10 | ✅ auth.log Invalid user | ❌ | ✅ port 22 burst |
+
+---
+
+## Key Detection Findings
+
+**Brute force vs. spray: different Wazuh rules fire**
+
+Brute force (many passwords, one account) triggers Rule 60204 — "Multiple Windows Logon Failures" (level 10) — because the failure count per account crosses the threshold. Password spray (one password, many accounts) gives each account exactly one failure — Rule 60204 never fires. The spray is only caught by correlating Rule 92652 successes from the same source across multiple accounts, or by the `dc(Account_Name) >= 3` Splunk query.
+
+**Zeek extracts usernames from NTLM wire traffic**
+
+For SMB attacks, Zeek's NTLM analyzer extracts usernames from NTLM Type 3 authentication messages on the wire. The full spray target list (`agarcia`, `lwilson`, `dbaker`, `mbrown`, `administrator`) is visible in Zeek without any agent on the target. SSH is encrypted after handshake — Zeek sees the connection burst but not the usernames.
+
+**auth.log reveals attacker's knowledge level**
+
+`Failed password for root` (user exists, wrong password — `unix_chkpwd` runs) vs. `Failed password for invalid user sysadmin` (username doesn't exist) distinguishes an attacker targeting a known account from one guessing. SSH's built-in rate limiting (`srclimit_penalise`) also fires against the attacker IP, adding connection delays after a failure burst.
+
+**Suricata is blind to authentication attacks**
+
+ET Open has no rules for SMB or SSH authentication failure patterns. Suricata only fired on Phase 1.1 Nmap reconnaissance (SID 2024364 "ET SCAN Possible Nmap User-Agent Observed"). Authentication-layer attacks at this volume are invisible to signature-based network IDS without custom rules.
+
+---
+
+## Splunk Detections
+
+**Windows SMB brute force — 4625 failure burst:**
 
 ```spl
-index=wineventlog EventCode=4625
-| eval username=mvindex(Account_Name, -1)
-| stats count as failure_count, dc(username) as unique_accounts by Source_Network_Address
-| where failure_count > 5
+index=wineventlog ComputerName="win-dc.soclab.local" EventCode=4625
+| stats count by Account_Name, Source_Network_Address, Failure_Reason
+| sort -count
 ```
 
-**Result:** 31 EventCode 4625 failures, 6 unique accounts, all from 192.168.20.100. Both `windows/brute-force.spl` and `windows/password-spray.spl` fire on the same row since both attacks ran from the same attacker IP and landed in the same bucket window — the brute force detection catches the high failure count, the spray detection catches the unique account count.
-
-[Brute force proof](screenshots/windows-brute-force-detected.png) · [Password spray proof](screenshots/windows-password-spray-detected.png)
-
-**Field name gotcha (Windows Server 2025 + Splunk UF 9.x):** the generic field names assumed when first writing these detections didn't match what Splunk's Windows TA actually extracts.
-
-| Field | Correct name | Note |
-|---|---|---|
-| Username | `Account_Name` | Multi-value — must use `mvindex(Account_Name, -1)` |
-| Source IP | `Source_Network_Address` | Not `IpAddress` |
-| Logon type | `Logon_Type` | Not `LogonType` |
-
----
-
-## Linux — Hydra over SSH
-
-```bash
-# Brute force: many passwords against one account
-hydra -l kali -P ~/lab/bf-passwords.txt ssh://192.168.10.181 -t 4
-
-# Password spray: one password against many accounts
-hydra -L ~/lab/users.txt -p 'Summer2024!' ssh://192.168.10.181 -t 4
-```
-
-**Detection query:**
+**Windows SMB spray — multiple accounts from same source:**
 
 ```spl
-index=linux_secure sshd ("Failed password" OR "Invalid user")
-| rex field=_raw "Failed password for (?:invalid user )?(?P<target_user>\S+) from (?P<src_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port (?P<src_port>\d+)"
-| rex field=_raw "Invalid user (?P<invalid_user>\S+) from (?P<src_ip_inv>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) port"
-| eval src_ip=coalesce(src_ip, src_ip_inv), target_user=coalesce(target_user, invalid_user)
-| bucket _time span=10m
-| stats count as failure_count, dc(target_user) as unique_accounts by _time, src_ip
+index=wineventlog ComputerName="win-dc.soclab.local" EventCode=4625
+| bucket _time span=1m
+| stats dc(Account_Name) as unique_accounts, count by _time, Source_Network_Address
+| where unique_accounts >= 3
+| sort -_time
 ```
 
-**Result:** 21 failed SSH logons, 6 unique accounts, from 192.168.20.100. Run a few minutes apart, the two attacks landed in *separate* 5-minute buckets — the brute force detection caught a clean 10-failures/1-account window, and a clean 11-failures/5-accounts window. The wider 10-minute spray detection merged both into a single 21-failures/6-accounts row. Good illustration of why bucket window size matters: too narrow and a slow spray fragments below threshold; too wide and you lose the ability to tell a brute force apart from a spray sharing the same IP.
+**Windows — full 4624/4625 view from attacker IP:**
 
-[Brute force proof](screenshots/linux-brute-force-detected.png) · [Password spray proof](screenshots/linux-password-spray-detected.png)
+```spl
+index=wineventlog ComputerName="win-dc.soclab.local" (EventCode=4624 OR EventCode=4625)
+  Source_Network_Address="10.10.30.100"
+| table _time, EventCode, Account_Name, Source_Network_Address, Logon_Type
+| sort -_time
+```
 
-**Gotcha:** `splunk add monitor` on the Kali Purple forwarder didn't write to `etc/system/local/inputs.conf` as expected — it landed in `etc/apps/search/local/inputs.conf`, with a typo (`index = linux_secur` instead of `linux_secure`). Splunk gives no error when events route to a non-existent index — they're silently dropped. The forwarder connection and source file both looked perfectly healthy the whole time. Caught by grepping every `inputs.conf` under `etc/apps/*/local/` for the actual monitor stanza.
+**Linux SSH failures from auth.log:**
+
+```spl
+index=linux_secure host="ubuntu-vm"
+| search _raw="*10.10.30.100*"
+| table _time, _raw
+| sort -_time
+```
+
+**Zeek — SMB burst with NTLM usernames:**
+
+```spl
+index=zeek sourcetype=zeek_json
+| spath input=_raw
+| search "id.orig_h"="10.10.30.100" "id.resp_h"="10.10.10.11"
+| table _time, "id.orig_h", "id.resp_h", "id.resp_p", service, username
+| sort -_time
+```
+
+**Zeek — SSH burst:**
+
+```spl
+index=zeek sourcetype=zeek_json
+| spath input=_raw
+| search "id.orig_h"="10.10.30.100" "id.resp_h"="10.10.10.100"
+| table _time, "id.orig_h", "id.resp_h", "id.resp_p", service
+| sort -_time
+```
 
 ---
 
-## Validated Detections
+## Field Name Reference
 
-| Detection | File | Result |
+| Field | Windows (wineventlog) | Linux (linux_secure) |
 |---|---|---|
-| Windows Brute Force | [`windows/brute-force.spl`](windows/brute-force.spl) | ✅ Fired — 31 failures, 1 account |
-| Windows Password Spray | [`windows/password-spray.spl`](windows/password-spray.spl) | ✅ Fired — 6 unique accounts |
-| Linux SSH Brute Force | [`linux/brute-force.spl`](linux/brute-force.spl) | ✅ Fired — 10 failures, 1 account |
-| Linux SSH Password Spray | [`linux/password-spray.spl`](linux/password-spray.spl) | ✅ Fired — 6 unique accounts (21 failures merged) |
-
----
-
-## Remediation Recommendations
-
-**Immediate:** Block the offending source IP, reset credentials for any account with a successful logon (4624 / `Accepted password`) within 5 minutes of a failure burst from the same IP, preserve logs on any host the attacker reached.
-
-**Hardening:** Enable account lockout policy (5 failures → 30 min lockout), deploy `fail2ban` on SSH hosts, enforce key-based SSH auth only (`PasswordAuthentication no`), disable `root` SSH login, set up Splunk alerts on both detections (`Save As → Alert`, trigger on `Number of Results > 0`).
-
-**Strategic:** MFA on all interactive/remote logons — this alone eliminates password spray as an effective initial access vector.
+| Source IP | `Source_Network_Address` (not `IpAddress`) | parsed from `_raw` |
+| Username | `Account_Name` | parsed from `_raw` |
+| Failure reason | `Failure_Reason` | "invalid user" vs "Failed password" in raw line |
 
 ---
 
 ## Related
 
-- [`lab-infrastructure/`](../lab-infrastructure/) — the Proxmox/OPNsense/Splunk build this runs on
-- [`future-work/`](../future-work/) — firewall/IDS-layer detections and extended attack-tool reference, not yet validated
+- [`ad-privesc-lab/`](../ad-privesc-lab/) — same infrastructure, AD privilege escalation chain
+- [`lab-infrastructure/`](../lab-infrastructure/) — Proxmox, OPNsense, Splunk, Wazuh build notes

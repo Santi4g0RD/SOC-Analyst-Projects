@@ -9,7 +9,7 @@
 
 A two-hop ACL privilege escalation chain against a live Active Directory domain. Starting with no credentials, the attacker discovers a misconfigured GenericWrite ACL through BloodHound, weaponizes it via targeted Kerberoasting, and escalates to full domain compromise via DCSync. Ends with a multi-technique persistence phase covering scheduled tasks, registry run keys, obfuscated PowerShell, and a Golden Ticket.
 
-Successor to [`ad-attack-detection/`](../ad-attack-detection/) — same infrastructure, harder attack path. That lab landed Domain Admin in phase 2 via a direct password spray on jsmith. This one starts as a standard user (agarcia) with no elevated rights and requires two ACL hops to reach DCSync.
+Each technique is validated across four independent detection layers — Wazuh EDR, Splunk, Suricata, and Zeek NSM — with blind spots documented where they exist.
 
 ---
 
@@ -104,5 +104,5 @@ agarcia  ──GenericWrite──►  mbrown  ──DS-Replication──►  Dom
 
 ## Related
 
-- [`ad-attack-detection/`](../ad-attack-detection/) — predecessor lab, same domain, direct DA spray path
-- [`lab-infrastructure/`](../lab-infrastructure/) — base Proxmox + OPNsense build
+- [`credential-attack-detection/`](../credential-attack-detection/) — same infrastructure, brute force and password spray across Windows SMB and Linux SSH
+- [`lab-infrastructure/`](../lab-infrastructure/) — Proxmox, OPNsense, Splunk, Wazuh build notes
