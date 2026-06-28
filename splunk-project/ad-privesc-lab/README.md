@@ -87,18 +87,18 @@ agarcia  ──GenericWrite──►  mbrown  ──DS-Replication──►  Dom
 
 | Phase | Technique | MITRE | Wazuh | Splunk | Suricata | Zeek |
 |---|---|---|---|---|---|---|
-| 1.1 | Port scan | T1046 | ❌ | ✅ filterlog 3,041 ports/min | ✅ SID 2024364 Nmap UA | ✅ 121k conn records |
-| 1.2 | User enumeration | T1087.002 | ✅ Rule 92652 | ✅ 4624 ANON LOGON | ❌ | ✅ SMB+LDAP burst |
-| 2.1 | Password spray | T1110.003 | ✅ Rules 60122+92652 | ✅ 4625 + 4624 | ❌ | ❌ same-node blind |
-| 3.1 | RDP lateral movement | T1021.001 | ✅ Rule 92653 | ✅ 4624 Logon_Type=10 | ❌ | ❌ same-node blind |
-| 4.1 | BloodHound ACL discovery | T1087.002 | ✅ Rules 92203+92105 | ✅ Sysmon EventCode 11 | ❌ intra-VLAN | ✅ port 3268 GC burst |
-| 5.1 | Kerberoasting (Rubeus) | T1558.003 | ✅ Rule 92203 (file drop) | ✅ 4769 etype=0x17 | ❌ intra-VLAN | ✅ port 88 krbtgt |
-| 5.2 | Hash crack (hashcat) | T1110.002 | — | — | — | — |
-| 6.1 | DCSync (Mimikatz) | T1003.006 | ✅ Rules 92213+92058 | ✅ 4662 replication GUIDs | ❌ intra-VLAN | ✅ port 49679 dynamic RPC |
-| 7.1 | Scheduled task | T1053.005 | ✅ Rule 60228 | ✅ 4698 full task XML | ❌ | ❌ |
-| 7.2 | Registry run key | T1547.001 | ✅ Rules 92302+92041 | ✅ Sysmon EventCode 13 | ❌ | ❌ |
-| 7.3 | Obfuscated PowerShell | T1059.001 + T1027 | ✅ Rule 92027 | ✅ 4104 decoded payload | ❌ | ❌ same-node blind |
-| 7.4 | Golden Ticket | T1558.001 | ✅ Rule 92650 lv12 | ✅ 4624+4672 no 4768 | ❌ | ✅ cifs/win-dc.soclab.local |
+| 1.1 | [Port scan](#11-port-scan--t1046) | T1046 | ❌ | ✅ filterlog 3,041 ports/min | ✅ SID 2024364 Nmap UA | ✅ 121k conn records |
+| 1.2 | [User enumeration](#12-user-enumeration--t1087002) | T1087.002 | ✅ Rule 92652 | ✅ 4624 ANON LOGON | ❌ | ✅ SMB+LDAP burst |
+| 2.1 | [Password spray](#21-password-spray--agarcia--t1110003) | T1110.003 | ✅ Rules 60122+92652 | ✅ 4625 + 4624 | ❌ | ❌ same-node blind |
+| 3.1 | [RDP lateral movement](#31-rdp-to-ws01-as-agarcia--t1021001) | T1021.001 | ✅ Rule 92653 | ✅ 4624 Logon_Type=10 | ❌ | ❌ same-node blind |
+| 4.1 | [BloodHound ACL discovery](#41-bloodhound--acl-path-discovery--t1087002) | T1087.002 | ✅ Rules 92203+92105 | ✅ Sysmon EventCode 11 | ❌ intra-VLAN | ✅ port 3268 GC burst |
+| 5.1 | [Kerberoasting (Rubeus)](#51-kerberoasting-mbrown--t1558003) | T1558.003 | ✅ Rule 92203 (file drop) | ✅ 4769 etype=0x17 | ❌ intra-VLAN | ✅ port 88 krbtgt |
+| 5.2 | [Hash crack (hashcat)](#52-offline-hash-crack--t1110002) | T1110.002 | — | — | — | — |
+| 6.1 | [DCSync (Mimikatz)](#61-dcsync--t1003006) | T1003.006 | ✅ Rules 92213+92058 | ✅ 4662 replication GUIDs | ❌ intra-VLAN | ✅ port 49679 dynamic RPC |
+| 7.1 | [Scheduled task](#71-scheduled-task--t1053005) | T1053.005 | ✅ Rule 60228 | ✅ 4698 full task XML | ❌ | ❌ |
+| 7.2 | [Registry run key](#72-registry-run-key--t1547001) | T1547.001 | ✅ Rules 92302+92041 | ✅ Sysmon EventCode 13 | ❌ | ❌ |
+| 7.3 | [Obfuscated PowerShell](#73-obfuscated-powershell--t1059001--t1027) | T1059.001 + T1027 | ✅ Rule 92027 | ✅ 4104 decoded payload | ❌ | ❌ same-node blind |
+| 7.4 | [Golden Ticket](#74-golden-ticket--t1558001) | T1558.001 | ✅ Rule 92650 lv12 | ✅ 4624+4672 no 4768 | ❌ | ✅ cifs/win-dc.soclab.local |
 
 ---
 

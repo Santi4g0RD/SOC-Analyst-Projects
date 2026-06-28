@@ -67,10 +67,10 @@ Both targets are on pve2; Kali is on pve1. All attack traffic is cross-node — 
 
 | Phase | Target | Tool | Technique | MITRE | Wazuh | Splunk | Suricata | Zeek |
 |---|---|---|---|---|---|---|---|---|
-| 1 | win-dc SMB | NetExec | Brute force — administrator + 11 passwords | T1110.001 | ✅ Rule 60204 lv10 | ✅ 4625 burst | ❌ | ✅ gssapi,smb,ntlm burst |
-| 2 | win-dc SMB | NetExec | Password spray — 5 users + 3 passwords | T1110.003 | ✅ Rule 92652 × 3 | ✅ dc(Account_Name) ≥ 3 | ❌ | ✅ NTLM usernames from wire |
-| 3 | ubuntu-vm SSH | Hydra | Brute force — root + 11 passwords | T1110.001 | ✅ Rule 5557 lv5 | ✅ auth.log Failed password | ❌ | ✅ port 22 burst |
-| 4 | ubuntu-vm SSH | Hydra | Password spray — 6 users + Summer2024! | T1110.003 | ✅ Rule 5712 lv10 | ✅ auth.log Invalid user | ❌ | ✅ port 22 burst |
+| 1 | win-dc SMB | NetExec | [Brute force — administrator + 11 passwords](#phase-1--windows-smb-brute-force--t1110001) | T1110.001 | ✅ Rule 60204 lv10 | ✅ 4625 burst | ❌ | ✅ gssapi,smb,ntlm burst |
+| 2 | win-dc SMB | NetExec | [Password spray — 5 users + 3 passwords](#phase-2--windows-smb-password-spray--t1110003) | T1110.003 | ✅ Rule 92652 × 3 | ✅ dc(Account_Name) ≥ 3 | ❌ | ✅ NTLM usernames from wire |
+| 3 | ubuntu-vm SSH | Hydra | [Brute force — root + 11 passwords](#phase-3--linux-ssh-brute-force--t1110001) | T1110.001 | ✅ Rule 5557 lv5 | ✅ auth.log Failed password | ❌ | ✅ port 22 burst |
+| 4 | ubuntu-vm SSH | Hydra | [Password spray — 6 users + Summer2024!](#phase-4--linux-ssh-password-spray--t1110003) | T1110.003 | ✅ Rule 5712 lv10 | ✅ auth.log Invalid user | ❌ | ✅ port 22 burst |
 
 ---
 
