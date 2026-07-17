@@ -1,0 +1,51 @@
+<!-- OT/ICS Detection Rules — GRFICSv2 Tennessee Eastman Lab -->
+<!-- Adapted from rudrasecure/otsoctraining for 10.10.50.x network -->
+<!-- Install on Wazuh manager: /var/ossec/etc/rules/local_rules.xml -->
+
+<group name="ot,plc,">
+
+  <!-- Monitor PLC output log for sensor values -->
+  <rule id="100050" level="0">
+    <location>/var/log/output.log</location>
+    <field name="value">\.+</field>
+    <description>PLC sensor value logged: $(value)</description>
+    <group>plc,</group>
+  </rule>
+
+  <!-- Alert on dangerous pressure values exceeding 55300 -->
+  <rule id="100051" level="13">
+    <if_sid>100050</if_sid>
+    <field name="value" type="pcre2">^(55[3-9]\d{2}|5[6-9]\d{3}|[6-9]\d{4}|\d{6,})</field>
+    <description>CRITICAL: PLC pressure setpoint at dangerous level: $(value)</description>
+    <group>plc,process_anomaly,</group>
+  </rule>
+
+  <!-- FIM: alert when PLC program file is modified (rogue upload) -->
+  <rule id="100052" level="10">
+    <if_group>syscheck</if_group>
+    <field name="file">/home/user/OpenPLC_v2/st_files</field>
+    <description>PLC program integrity alert — st_files directory modified</description>
+    <group>plc,syscheck,t1565001,</group>
+  </rule>
+
+  <!-- Alert when PLC communicates with unknown/unauthorized IP -->
+  <!-- Authorized: grfics-sim (10.10.50.10-15), ScadaBR (10.10.55.10), workstation (10.10.50.30) -->
+  <rule id="100053" level="13">
+    <if_sid>86601</if_sid>
+    <field name="src_ip">10.10.50.20</field>
+    <field name="dest_ip" negate="yes">10.10.55.10|10.10.50.10|10.10.50.11|10.10.50.12|10.10.50.13|10.10.50.14|10.10.50.15|10.10.50.30</field>
+    <description>CRITICAL: PLC communicating with unauthorized IP: $(dest_ip)</description>
+    <group>plc,suricata,t1855,</group>
+  </rule>
+
+  <!-- Alert on Modbus WRITE from unauthorized source (via Suricata) -->
+  <rule id="100054" level="12">
+    <if_sid>86601</if_sid>
+    <field name="dest_ip">10.10.50.20</field>
+    <field name="dest_port">502</field>
+    <field name="src_ip" negate="yes">10.10.50.10|10.10.50.11|10.10.50.12|10.10.50.13|10.10.50.14|10.10.50.15|10.10.55.10|10.10.50.30</field>
+    <description>Unauthorized Modbus access to PLC from: $(src_ip)</description>
+    <group>plc,suricata,t1855,</group>
+  </rule>
+
+</group>
