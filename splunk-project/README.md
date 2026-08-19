@@ -1,52 +1,26 @@
 # Splunk SOC Lab — Detection Engineering
 
 **Analyst:** Santiago Abel Ruiz Diaz  
-**Platform:** Wazuh 4.12.0 EDR · Splunk Enterprise 10.4.0 · OPNsense Suricata (ET Open) · Zeek NSM  
-**Infrastructure:** Proxmox two-node cluster · 4-VLAN segmented network · hardware SPAN for full traffic capture
+**Platform:** Wazuh 4.12.0 EDR · Splunk Enterprise 10.4.0 · Security Onion (Elastic + Zeek + Suricata) · OPNsense Suricata (ET Open) · Zeek NSM  
+**Infrastructure:** Proxmox three-node cluster · 7-VLAN segmented network (IT + OT/ICS + BACnet) · hardware SPAN for full traffic capture
 
 A self-hosted home lab built to practice detection engineering end-to-end: design the infrastructure, simulate real attacks, and validate that every detection layer catches them — or document why it doesn't.
+
+![SOC Lab full topology — 7 VLANs, Proxmox 3-node cluster, IT + OT + BACnet segments](lab-infrastructure/screenshots/soclab_topology_current.svg)
 
 ---
 
 ## Lab Infrastructure
 
+Full topology is the diagram above — 7 VLANs across a 3-node Proxmox cluster (pve1/pve2/pve3), OPNsense as the inter-VLAN router with inline Suricata, and hardware SPAN feeding Zeek.
+
+Detection layers per technique:
 ```
-  ╔══════════════════════════════════════════════════════════════════════╗
-  ║  SOCLAB  —  Proxmox pve1 (i5-4570, 31 GB)  +  pve2 (32 GB)        ║
-  ║  TL-SG108E managed switch  —  hardware SPAN port 8 → Zeek          ║
-  ╚══════════════════════════════════════════════════════════════════════╝
-
-  ╔═══════════════════════════════════════════════╗
-  ║  VLAN 30 — ATTACKERS   10.10.30.0/24         ║
-  ║  voldemort (Kali)       10.10.30.100  pve1   ║
-  ╚═══════════════════════╦═══════════════════════╝
-                          ║
-                          ▼
-  ┌─────────────────────────────────────────────┐
-  │  OPNsense  —  inter-VLAN router             │
-  │  Suricata IDS (ET Open ruleset)             │
-  └──────────╦──────────────────────╦───────────┘
-             ║                      ║
-             ▼                      ▼
-  ╔══════════════════════╗   ╔══════════════════════════════╗
-  ║  VLAN 10 — SERVERS   ║   ║  VLAN 20 — DETECTION        ║
-  ║  10.10.10.0/24       ║   ║  10.10.20.0/24               ║
-  ║                      ║   ║                              ║
-  ║  ws01   10.10.10.10  ║   ║  splunk  10.10.20.50  pve1  ║
-  ║  pve1   domain user  ║   ║  zeek    10.10.20.30  pve1  ║
-  ║                      ║   ║  wazuh   10.10.20.20  pve2  ║
-  ║  win-dc 10.10.10.11  ║   ╚══════════════════════════════╝
-  ║  pve2   soclab.local ║
-  ║                      ║
-  ║  ubuntu-vm 10.10.10.100
-  ║  pve2   SSH target   ║
-  ╚══════════════════════╝
-
-  Four detection layers per technique:
-  Wazuh EDR  ──►  host-based alerts (agents on win-dc, ws01, ubuntu-vm)
-  Splunk     ──►  SPL against wineventlog + linux_secure + opnsense + zeek
-  Suricata   ──►  network IDS at the inter-VLAN boundary
-  Zeek NSM   ──►  full traffic metadata via hardware SPAN
+Wazuh EDR         ──►  host-based alerts (agents on win-dc, ws01, ubuntu-vm)
+Splunk            ──►  SPL against wineventlog + linux_secure + opnsense + zeek
+Security Onion    ──►  second Elastic-based SIEM/NSM (own Zeek + Suricata)
+Suricata (OPNsense) ─►  inline network IDS at the inter-VLAN boundary
+Zeek NSM          ──►  full traffic metadata via hardware SPAN
 ```
 
 ---
