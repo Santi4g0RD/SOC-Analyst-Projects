@@ -45,20 +45,9 @@ Every attack-detection project in this portfolio ([`ad-privesc-lab/`](../ad-priv
 
 ---
 
-## Recent Operational Work
-
-The lab went down and came back up across a full verification pass — every VLAN and host checked live, not assumed healthy. That surfaced two real infrastructure problems, both found and fixed in the process of standing up [Security Onion](../security-onion/) as a second detection platform:
-
-- A standalone Zeek sensor had silently crashed 25 days earlier — found via stale log timestamps, fixed, confirmed with fresh capture.
-- A Proxmox node's 3.5TB physical disk was invisible to the hypervisor — its LVM-thin pool was never registered as usable storage. Recovered and consolidated.
-
-Full writeup, including the Security Onion install itself: [`security-onion/`](../security-onion/)
-
----
-
 ## Related Projects
 
-- [`security-onion/`](../security-onion/) — second SIEM/NSM platform, license-free, plus the operational fixes above
+- [`security-onion/`](../security-onion/) — second SIEM/NSM platform, license-free
 - [`ot-ics-lab/`](../ot-ics-lab/) — Purdue-model OT/ICS build (GRFICSv2 + OpenPLC + ScadaBR)
 - [`ad-privesc-lab/`](../ad-privesc-lab/) — AD attack chain validated across this infrastructure's detection stack
 - [`credential-attack-detection/`](../credential-attack-detection/) — brute force / spray detection across Windows and Linux targets

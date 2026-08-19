@@ -45,7 +45,7 @@ The full Level 0 → 1 → 2 Modbus chain is live and confirmed working end-to-e
 
 ## Attack Scripts & Detection Rules — written, not yet run
 
-Attack scripts and a first set of Wazuh detection rules are written and staged, ready for the next phase, but nothing has been run against this build yet — no attack results are claimed here.
+Attack scripts and a first set of Wazuh detection rules are staged for the next phase — not run yet.
 
 - [`attack-scripts/modbus_attack.py`](attack-scripts/modbus_attack.py) — Modbus FC16 WRITE to setpoint registers 0–9 and pressure safety override registers 1025/1026 (T1855)
 - [`attack-scripts/shutdown_plant.py`](attack-scripts/shutdown_plant.py) — coil 40 write, emergency shutdown interlock (T1855)
