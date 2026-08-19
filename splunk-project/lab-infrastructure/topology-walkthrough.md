@@ -97,8 +97,8 @@ All 7 simulated HVAC/BMS devices online: AHU-01, CO2-01, FCU-01, FCU-02, OAT-01,
 
 | Skill | Evidence |
 |---|---|
-| **Systematic verification, not assumption** | Every VLAN and host checked live post-outage, not declared healthy by default |
-| **Real troubleshooting under uncertainty** | Found a silently-crashed Zeek sensor from stale log timestamps alone, diagnosed and fixed it |
-| **Infrastructure recovery** | Recovered a 3.5TB storage pool that Proxmox itself couldn't see (full story in [`../security-onion/`](../security-onion/)) |
-| **Honest scoping** | Splunk's license issue is documented as an open, self-resolving item — not hidden or worked around with a shortcut |
-| **OT/ICS + BACnet fluency** | Live process data and a real-time protocol read captured as evidence, not staged screenshots |
+| **Systematic verification** | Every VLAN and host checked live, post-outage |
+| **Troubleshooting** | Found a crashed Zeek sensor from stale log timestamps, diagnosed and fixed it |
+| **Infrastructure recovery** | Recovered a 3.5TB storage pool Proxmox couldn't see |
+| **Honest scoping** | Splunk's license gate is documented openly as an open item |
+| **OT/ICS + BACnet fluency** | Live process data and a real-time BACnet read captured as evidence |
