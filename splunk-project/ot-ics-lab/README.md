@@ -6,7 +6,7 @@
 **Platform:** GRFICSv2 (Tennessee Eastman process simulation) · OpenPLC v2 · ScadaBR HMI · Wazuh 4.12.0 EDR · Splunk Enterprise 10.4.0 · Zeek NSM (icsnpp-modbus)
 **Status:** Infrastructure built and verified end-to-end · Attack simulation and detection validation — in progress
 
-A Purdue-model ICS segment added to the home SOC lab on its own isolated VLANs — a process simulation, a soft PLC, and a supervisory HMI wired together the way a real Level 0–2 OT environment is, so that attack simulation and detection validation happen against something structurally honest rather than a single flat network.
+A Purdue-model ICS segment added to the home SOC lab on its own isolated VLANs — a process simulation, a soft PLC, and a supervisory HMI wired together the way a real Level 0–2 OT environment is, not a single flat network.
 
 ---
 
@@ -51,7 +51,7 @@ Attack scripts and a first set of Wazuh detection rules are written and staged, 
 - [`attack-scripts/shutdown_plant.py`](attack-scripts/shutdown_plant.py) — coil 40 write, emergency shutdown interlock (T1855)
 - [`wazuh/local_rules.xml`](wazuh/local_rules.xml) — PLC pressure-value monitoring, FIM on the PLC program directory, unauthorized-source Modbus access
 
-**Two issues found reviewing the rules before deployment, flagged here rather than deployed silently:**
+**Two issues found reviewing the rules before deployment:**
 
 1. Two of the rules depend on `if_sid 86601` (Wazuh's native Suricata EVE-JSON alert rule), which requires a Wazuh agent reading `eve.json` directly. The rest of this lab routes Suricata alerts via OPNsense syslog → **Splunk** instead (see `credential-attack-detection/` and `ad-privesc-lab/`), so as written these two rules won't fire against this lab's actual log flow — needs a pipeline decision before deploying.
 2. The PLC pressure-value rule parses a `value` field out of `/var/log/output.log` with no accompanying decoder to extract it — inherited from the upstream project, which has the same gap. Needs a live check against the actual log format.

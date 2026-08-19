@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-19
 **Analyst:** Santiago Abel Ruiz Diaz
-**Purpose:** Live, end-to-end verification of the whole lab after an outage — every VLAN, one real screenshot per host/service, captured fresh rather than assumed healthy. Two real infrastructure problems were found and fixed along the way, documented honestly below rather than left out.
+**Purpose:** Live, end-to-end verification of the whole lab after an outage — every VLAN, one real screenshot per host/service. Two real infrastructure problems turned up along the way and got fixed.
 
 ← Back to [`lab-infrastructure/`](README.md)
 
