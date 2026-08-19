@@ -26,9 +26,3 @@ The OPNsense firewall and Suricata IDS are both running and confirmed forwarding
 ## Extended Attack Tool Reference
 
 [`extended-attack-tool-reference.md`](extended-attack-tool-reference.md) documents additional attack techniques and tools (Kerberos spray via Kerbrute, multi-host spray via Medusa, two-phase username enumeration + targeted brute force) that weren't run in this lab but map to detection logic already covered by the existing SPL files. Useful as a reference for extending the lab later.
-
----
-
-## OT/ICS Lab
-
-[`ot-ics-lab.md`](ot-ics-lab.md) is a full design and build plan for adding an OT/ICS segment to the existing lab using GRFICSv2 (process simulation + OpenPLC + ScadaBR HMI) on a dedicated VLAN 50. Covers OVA→Proxmox conversion, Zeek ICSNPP Modbus parser, ET SCADA Suricata ruleset, a new `index=ot` in Splunk, and an n8n alert-only OT branch. Includes a full attack exercise: VLAN 30 pivot → PLC setpoint manipulation → detection chain verification.
