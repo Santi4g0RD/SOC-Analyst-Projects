@@ -13,7 +13,7 @@ Security Onion running alongside Splunk on the same detection VLAN, not replacin
 
 ## Why
 
-Splunk's Enterprise trial license expired mid-build and hit a license-violation gate that Splunk's own documentation says has no self-service reset short of a support case — individual warnings age out after 30 days, so it clears on its own eventually, but there's no way to force it. Rather than lose weeks of portfolio momentum waiting on a licensing clock, this stood up a second platform that doesn't have that failure mode at all: Security Onion's core stack has no trial period, no daily-volume quota, and no search-lockout mechanism.
+A second, fully open NSM/SIEM stack alongside Splunk — no trial period, no volume quota, no license-server enforcement to manage.
 
 ---
 
@@ -34,18 +34,18 @@ Standalone install has real hardware requirements that surfaced mid-wizard, not 
 3. **Root partition undersized despite a big enough virtual disk** — Anaconda's automatic partitioning gave `/` only 64GB out of a 200GB disk (the rest went to `/nsm`, `/tmp`, swap), short of Security Onion's 100GB-free requirement on root specifically. Fixed by growing the virtual disk and extending only the root LV into the new space, leaving the dedicated `/nsm` log-storage volume untouched.
 4. **`so-setup` requires a positional argument** (`iso`/`network`/`analyst`) — running it bare fails with an unhelpful "invalid install type" error; the wizard only auto-passes this on the very first boot, not on manual re-runs.
 
-None of these are documented as pre-requisites up front — found and resolved by reading the actual error output and, where the docs were thin, the installer's own source.
+Found and resolved by reading the actual error output and, where the docs were thin, the installer's own source.
 
-### Known, honestly-scoped gaps
+### Known gaps
 
-- The monitor/sensor NIC is configured but not wired to real SPAN traffic yet — it's a placeholder on the management VLAN. Whether this instance takes over the existing hardware SPAN feed (currently going to a standalone Zeek sensor), gets its own tap, or something else is a deliberate follow-up decision, not an oversight.
-- Elastic Fleet's bulk threat-intel package install (MISP, OTX, CrowdStrike integrations, etc.) failed during setup — confirmed non-fatal, core detection stack unaffected. These are optional paid/community TI feeds, not required for Zeek/Suricata/Elastic to function.
+- The monitor/sensor NIC is configured but not wired to real SPAN traffic yet — a placeholder on the management VLAN. Whether this instance takes over the existing hardware SPAN feed, gets its own tap, or something else is a follow-up decision.
+- Elastic Fleet's bulk threat-intel package install (MISP, OTX, CrowdStrike integrations, etc.) failed during setup, non-fatal — core detection stack unaffected. Optional TI feeds, not required for Zeek/Suricata/Elastic to function.
 
 ---
 
-## Bonus finds — the outage this build surfaced
+## Two more fixes along the way
 
-Sizing this VM's storage led to checking every other host in the lab, which turned up two real problems unrelated to Security Onion itself:
+Sizing this VM's storage meant checking every other host in the lab, which turned up two unrelated problems:
 
 - **A standalone Zeek sensor had been silently crashed for 25 days** (`zeekctl status` → `crashed`, log files stale since the outage) — found while verifying the rest of the detection stack was healthy, fixed with `zeekctl deploy`, confirmed with fresh log timestamps.
 

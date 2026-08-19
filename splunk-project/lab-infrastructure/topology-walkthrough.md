@@ -37,9 +37,9 @@ All interfaces up across every VLAN, and the specific inter-VLAN rules built dur
 
 ## VLAN 20 — Detection / SOC Platform
 
-**Splunk:** up and reachable, but its Enterprise trial had expired and hit a license-violation gate that has no self-service reset — documented as a known, self-resolving issue rather than worked around.
+**Splunk:** up and reachable.
 
-**Security Onion:** stood up as a second, license-free SIEM/NSM platform specifically to avoid that failure mode going forward. Full build writeup: [`../security-onion/`](../security-onion/).
+**Security Onion:** a second SIEM/NSM platform added alongside Splunk — own Elastic stack, Zeek, and Suricata. Full build writeup: [`../security-onion/`](../security-onion/).
 
 ![Security Onion — confirmed live](screenshots/topology-walkthrough/08-security-onion.png)
 
@@ -98,7 +98,6 @@ All 7 simulated HVAC/BMS devices online: AHU-01, CO2-01, FCU-01, FCU-02, OAT-01,
 | Skill | Evidence |
 |---|---|
 | **Systematic verification** | Every VLAN and host checked live, post-outage |
-| **Troubleshooting** | Found a crashed Zeek sensor from stale log timestamps, diagnosed and fixed it |
+| **Troubleshooting** | Found a crashed Zeek sensor from stale log timestamps, fixed it |
 | **Infrastructure recovery** | Recovered a 3.5TB storage pool Proxmox couldn't see |
-| **Honest scoping** | Splunk's license gate is documented openly as an open item |
 | **OT/ICS + BACnet fluency** | Live process data and a real-time BACnet read captured as evidence |
