@@ -17,7 +17,7 @@ Full topology is the diagram above — 7 VLANs across a 3-node Proxmox cluster (
 Detection layers per technique:
 ```
 Wazuh EDR         ──►  host-based alerts (agents on win-dc, ws01, ubuntu-vm)
-Splunk            ──►  SPL against wineventlog + linux_secure + opnsense + zeek
+Splunk            ──►  SPL against wineventlog + linux_secure + opnsense + zeek (currently license-gated)
 Security Onion    ──►  second Elastic-based SIEM/NSM (own Zeek + Suricata)
 Suricata (OPNsense) ─►  inline network IDS at the inter-VLAN boundary
 Zeek NSM          ──►  full traffic metadata via hardware SPAN

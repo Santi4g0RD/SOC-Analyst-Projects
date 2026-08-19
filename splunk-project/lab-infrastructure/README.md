@@ -37,7 +37,7 @@ Every attack-detection project in this portfolio ([`ad-privesc-lab/`](../ad-priv
 | Layer | Role |
 |---|---|
 | Wazuh EDR | Host-based alerts — agents on win-dc, win-target, and Linux hosts |
-| Splunk Enterprise | SPL search across wineventlog, linux_secure, opnsense, zeek indexes |
+| Splunk Enterprise | SPL search across wineventlog, linux_secure, opnsense, zeek indexes — currently license-gated, search unavailable |
 | Security Onion | Second, license-free SIEM/NSM — own Elasticsearch/Kibana, Zeek, and Suricata |
 | Suricata (OPNsense) | Inline network IDS at every inter-VLAN boundary |
 | Zeek NSM | Full traffic metadata via hardware SPAN |
