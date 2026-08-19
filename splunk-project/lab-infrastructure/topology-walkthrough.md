@@ -93,10 +93,6 @@ All 7 simulated HVAC/BMS devices online: AHU-01, CO2-01, FCU-01, FCU-02, OAT-01,
 
 ---
 
-## What This Demonstrates
+## Summary
 
-| Skill | Evidence |
-|---|---|
-| **Systematic verification** | Every VLAN and host checked live, post-outage |
-| **Catching silent failures** | A dead sensor and unusable storage capacity — both invisible until actively checked, both found and fixed |
-| **OT/ICS + BACnet fluency** | Live process data and a real-time BACnet read captured as evidence |
+Built to practice detection engineering across a real, segmented environment — IT, OT/ICS, and BACnet together, not just a flat Windows/Linux lab. After an outage, every VLAN and host got checked live rather than assumed healthy, which caught a dead Zeek sensor and a storage pool the hypervisor couldn't see. Both fixed, whole lab confirmed running end to end.
