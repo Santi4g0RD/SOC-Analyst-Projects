@@ -14,6 +14,8 @@ Every attack-detection project in this portfolio ([`ad-privesc-lab/`](../ad-priv
 
 ![Full SOC lab topology — 7 VLANs, 3-node Proxmox cluster, IT + OT/ICS + BACnet](screenshots/soclab_topology_current.svg)
 
+**[Full Topology & Purdue Model Walkthrough →](topology-walkthrough.md)** — live, screenshot-by-screenshot verification of every VLAN and host, including two real infrastructure problems found and fixed along the way.
+
 ---
 
 ## VLANs
