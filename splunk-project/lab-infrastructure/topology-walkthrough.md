@@ -95,4 +95,4 @@ All 7 simulated HVAC/BMS devices online: AHU-01, CO2-01, FCU-01, FCU-02, OAT-01,
 
 ## Summary
 
-Built to practice detection engineering across a real, segmented environment — IT, OT/ICS, and BACnet together, not just a flat Windows/Linux lab. After an outage, every VLAN and host got checked live rather than assumed healthy, which caught a dead Zeek sensor and a storage pool the hypervisor couldn't see. Both fixed, whole lab confirmed running end to end.
+A 7-VLAN Proxmox lab for practicing detection engineering — IT, OT/ICS, and BACnet segments together. This page verifies the whole environment is up and working, VLAN by VLAN.
