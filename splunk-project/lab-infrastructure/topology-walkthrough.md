@@ -98,6 +98,5 @@ All 7 simulated HVAC/BMS devices online: AHU-01, CO2-01, FCU-01, FCU-02, OAT-01,
 | Skill | Evidence |
 |---|---|
 | **Systematic verification** | Every VLAN and host checked live, post-outage |
-| **Troubleshooting** | Found a crashed Zeek sensor from stale log timestamps, fixed it |
-| **Infrastructure recovery** | Recovered a 3.5TB storage pool Proxmox couldn't see |
+| **Catching silent failures** | A dead sensor and unusable storage capacity — both invisible until actively checked, both found and fixed |
 | **OT/ICS + BACnet fluency** | Live process data and a real-time BACnet read captured as evidence |
