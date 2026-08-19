@@ -7,7 +7,7 @@ A 7-VLAN Proxmox environment: standard SOC infrastructure (servers, detection st
 
 That separation is the point. IT and OT get segmented in production for real reasons — different protocols, different failure tolerance, different incident-response rules.
 
-This page is the evidence it's real: every VLAN and host checked live, one screenshot per host.
+Every VLAN and host below has a screenshot, not just a description.
 
 ← Back to [`lab-infrastructure/`](README.md)
 
