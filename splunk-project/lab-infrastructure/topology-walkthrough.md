@@ -2,7 +2,12 @@
 
 **Date:** 2026-08-19
 **Analyst:** Santiago Abel Ruiz Diaz
-**Purpose:** Live, end-to-end verification of the whole lab after an outage — every VLAN, one real screenshot per host/service. Two real infrastructure problems turned up along the way and got fixed.
+
+A 7-VLAN Proxmox environment: standard SOC infrastructure (servers, detection stack, attacker segment, management) plus two OT segments — an ICS/Modbus process simulation and a BACnet building-automation network — isolated the way real IT/OT boundaries are, not bolted onto a flat lab.
+
+That separation is the point. IT and OT get segmented in production for real reasons — different protocols, different failure tolerance, different incident-response rules.
+
+This page is the evidence it's real: every VLAN and host checked live, one screenshot per host.
 
 ← Back to [`lab-infrastructure/`](README.md)
 
@@ -91,12 +96,3 @@ All 7 simulated HVAC/BMS devices online: AHU-01, CO2-01, FCU-01, FCU-02, OAT-01,
 
 ![bacnet-sim — all 7 devices online](screenshots/topology-walkthrough/17-bacnet-sim.png)
 
----
-
-## Summary
-
-A 7-VLAN Proxmox environment: standard SOC infrastructure (servers, detection stack, attacker segment, management) plus two OT segments — an ICS/Modbus process simulation and a BACnet building-automation network — isolated the way real IT/OT boundaries are, not bolted onto a flat lab.
-
-That separation is the point. IT and OT get segmented in production for real reasons — different protocols, different failure tolerance, different incident-response rules — and building both correctly, not just one or the other, is what most SOC portfolios skip.
-
-This page is the evidence it's real: every VLAN and host checked live, one screenshot per host.
