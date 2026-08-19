@@ -3,8 +3,8 @@
 ## Detection Engineering Project
 
 **Analyst:** Santiago Abel Ruiz Diaz
-**Platform:** GRFICSv2 (Tennessee Eastman process simulation) · OpenPLC v2 · ScadaBR HMI · Wazuh 4.12.0 EDR · Splunk Enterprise 10.4.0 · Zeek NSM (icsnpp-modbus)
-**Status:** Infrastructure built and verified end-to-end · Attack simulation and detection validation — in progress
+**Platform:** GRFICSv2 (Tennessee Eastman process simulation) · OpenPLC v2 · ScadaBR HMI
+**Status:** Infrastructure built and verified end-to-end · Detection stack (Wazuh, Zeek) staged but not yet deployed or tested against this segment
 
 A Purdue-model ICS segment added to the home SOC lab on its own isolated VLANs — a process simulation, a soft PLC, and a supervisory HMI wired together the way a real Level 0–2 OT environment is, not a single flat network.
 
