@@ -1,216 +1,62 @@
 # Home Lab Infrastructure
-## Proxmox — OPNsense Firewall + Splunk SIEM
-
-> **Note — v1 Build (Superseded)**
-> This document describes the original flat-network lab (192.168.x.x, three Proxmox bridges: vmbr0/vmbr1/vmbr2). It was redesigned into a VLAN-segmented architecture (10.10.x.x, four VLANs, TL-SG108E managed switch, hardware SPAN for Zeek NSM) to support the AD attack and privilege escalation projects. The active lab runs on that newer architecture — see [`ad-privesc-lab/README.md`](../ad-privesc-lab/README.md) for the current network diagram.
 
 **Analyst:** Santiago Abel Ruiz Diaz
-**Proxmox Host:** pve1 — Intel i5-4570 @ 3.20GHz, 4 cores, 31.24 GiB RAM, 3.57 TiB HDD
-**Status:** Complete — v1 build (see note above)
+**Platform:** Proxmox 3-node cluster (pve1/pve2/pve3) · OPNsense · 7-VLAN segmented network · hardware SPAN for full traffic capture
+**Status:** Active — this is the platform every other project in this portfolio runs on
 
 ---
 
 ## Overview
 
-This is the platform everything else in this portfolio runs on: a self-hosted Proxmox lab with an OPNsense firewall segmenting an attacker VLAN from a target LAN, and a Splunk Enterprise instance collecting logs from every target. Both [`credential-attack-detection/`](../credential-attack-detection/) and [`atomic-red-team/`](../atomic-red-team/) build directly on top of this.
+A self-hosted Proxmox lab segmented into 7 VLANs behind an OPNsense router: standard IT infrastructure (servers, detection stack, attackers, management) plus two dedicated OT/ICS segments — a Modbus/SCADA process simulation and a BACnet/IP building-automation simulation — under a shared Purdue-model architecture. A TL-SG108E managed switch mirrors every Proxmox node's uplink to a SPAN port feeding Zeek NSM for full packet visibility.
+
+Every attack-detection project in this portfolio ([`ad-privesc-lab/`](../ad-privesc-lab/), [`credential-attack-detection/`](../credential-attack-detection/), [`ot-ics-lab/`](../ot-ics-lab/)) runs on top of this infrastructure.
+
+![Full SOC lab topology — 7 VLANs, 3-node Proxmox cluster, IT + OT/ICS + BACnet](screenshots/soclab_topology_current.svg)
 
 ---
 
-## Network Diagram
+## VLANs
 
-```
-                         ┌──────────────────────────────────────────────────┐
-                         │                Proxmox Host (pve1)                │
-                         │                                                    │
-                         │   vmbr0 — 192.168.1.0/24   (WAN / Management)     │
-                         │   vmbr1 — 192.168.10.0/24  (Lab LAN)              │
-                         │   vmbr2 — 192.168.20.0/24  (Attacker VLAN)        │
-                         └──────────────────────────────────────────────────┘
-                                       │              │              │
-                  ┌────────────────────┘              │              └────────────────────┐
-                  │                                    │                                   │
-         ┌────────▼─────────┐                ┌─────────▼─────────┐               ┌─────────▼─────────┐
-         │  VM 201           │                │  VM 206           │               │  VM 202            │
-         │  OPNsense         │                │  splunk            │               │  voldemort          │
-         │  Firewall/IDS     │                │  Splunk Enterprise  │               │  Kali (attacker)    │
-         │  vtnet0 → vmbr0   │                │  vmbr1              │               │  vmbr2               │
-         │  vtnet1 → vmbr1   │                │  192.168.10.50       │               │  192.168.20.100       │
-         │  vtnet2 → vmbr2   │                └──────────────────────┘               └──────────────────────┘
-         └───────────────────┘
-                  │
-                  │  vmbr1 (Lab LAN)
-         ┌────────┴──────────────────────────────┐
-         │                                        │
-┌────────▼──────────┐                  ┌──────────▼─────────┐
-│  VM 207             │                  │  VM 203              │
-│  win-target          │                  │  purple-voldemort      │
-│  Windows Server 2025  │                  │  Kali Purple (SSH target)│
-│  192.168.10.10          │                  │  192.168.10.181            │
-└─────────────────────────┘                  └──────────────────────────┘
-```
-
-OPNsense sits at the boundary of all three networks. The attacker VLAN (`vmbr2`) only reaches the lab LAN (`vmbr1`) through firewall rules that are explicitly scoped and logged — every attack in this portfolio crosses that boundary and shows up in `index=opnsense` filterlog.
+| VLAN | Segment | Subnet | Notes |
+|---|---|---|---|
+| 10 | Servers | 10.10.10.0/24 | win-dc, win-target — soclab.local AD domain |
+| 20 | Detection | 10.10.20.0/24 | Splunk, Wazuh, Zeek, Security Onion, n8n, IRIS |
+| 30 | Attackers | 10.10.30.0/24 | Kali |
+| 40 | Management | 10.10.40.0/24 | Proxmox cluster nodes, admin workstation |
+| 50 | ICSNETWORK | 10.10.50.0/24 | GRFICSv2 process simulation + OpenPLC (Purdue L0–L1) |
+| 55 | OTDMZ | 10.10.55.0/24 | ScadaBR HMI + Node-RED BAS supervisor (Purdue L2) |
+| 60 | BACNET | 10.10.60.0/24 | 7-device HVAC/BMS simulator |
 
 ---
 
-## Detection Data Flow
+## Detection Stack
 
-```
-╔══════════════════════════════════════════════════════════════════════════════════════╗
-║      S O C   H O M E   L A B  —  D E T E C T I O N   D A T A   F L O W           ║
-║             Proxmox pve1  ·  Intel i5-4570  ·  31 GB RAM  ·  3.5 TB               ║
-╚══════════════════════════════════════════════════════════════════════════════════════╝
-
-  ╔═══════════════════════════════════════════════════════════════════════════════╗
-  ║  ATTACKER VLAN  ·  vmbr2  ·  192.168.20.0/24                                 ║
-  ╠═══════════════════════════════════════════════════════════════════════════════╣
-  ║   ┌───────────────────────────────────────────────────────────────────────┐  ║
-  ║   │  VM 202  ·  Kali Linux  (voldemort)  ·  192.168.20.100               │  ║
-  ║   │  NetExec  ·  Hydra  ·  Impacket  (GetUserSPNs / secretsdump)         │  ║
-  ║   └─────────────────────────────────────┬─────────────────────────────────┘  ║
-  ╚═════════════════════════════════════════╬═════════════════════════════════════╝
-                                            │  attack traffic
-                                            ▼
-  ┌────────────────────────────────────────────────────────────────────────────────────┐
-  │  VM 201  ·  OPNsense  ·  192.168.10.1  ·  vmbr0 / vmbr1 / vmbr2                  │
-  │  Firewall  ·  Suricata IDS  (ET Open rulesets, PCAP mode)                         │
-  └──────────────────────┬───────────────────────────────────────────────────────┬─────┘
-                         │ allowed traffic                                        │
-             SSH(22)  SMB(445)  RDP(3389)                              filterlog + Suricata
-          Kerberos(88)  LDAP(389)  DNS(53)                             → UDP 514 → index=opnsense
-                         │                                                        │
-                         ▼                                                        │
-  ╔═══════════════════════════════════════════════════════╗                       │
-  ║  LAB LAN  ·  vmbr1  ·  192.168.10.0/24               ║                       │
-  ╠═══════════════════════════════════════════════════════╣                       │
-  ║  ┌─────────────────────────────────────────────────┐  ║                       │
-  ║  │  VM 207  ·  win-target  ·  192.168.10.10        │  ║                       │
-  ║  │  Windows Server 2025                            │  ║                       │
-  ║  │  Sysmon  ·  Wazuh Agent  ·  Splunk UF           │  ║                       │
-  ║  ├─────────────────────────────────────────────────┤  ║                       │
-  ║  │  VM 208  ·  win-dc  ·  192.168.10.11            │  ║                       │
-  ║  │  soclab.local DC  ·  Windows Server 2025        │  ║                       │
-  ║  │  Sysmon  ·  Wazuh Agent  ·  Splunk UF           │  ║                       │
-  ║  ├─────────────────────────────────────────────────┤  ║                       │
-  ║  │  VM 203  ·  purple-voldemort  ·  192.168.10.181 │  ║                       │
-  ║  │  Kali Purple (SSH target)                       │  ║                       │
-  ║  │  rsyslog  ·  Wazuh Agent  ·  Splunk UF          │  ║                       │
-  ║  └──────────────────┬──────────────────────┬───────┘  ║                       │
-  ║                     │  Wazuh agent          │ Splunk UF║                       │
-  ╚═════════════════════╬══════════════════════╬═══════════╝                       │
-                        │                      │                                   │
-                        ▼                      │                                   │
-  ┌─────────────────────────────────────────┐  │                                   │
-  │  Wazuh Manager  ·  VM 206  ·  .10.50    │  │                                   │
-  │  EDR alert processing                   │  │                                   │
-  │  brute force · Kerberoasting · DCSync   │  │                                   │
-  │  Windows + Linux cross-platform EDR     │  │                                   │
-  └──────────────────────┬──────────────────┘  │                                   │
-                         │  HEC                 │                                   │
-                         └──────────────────────┴───────────────────────────────────┘
-                                                │
-                                                ▼
-  ╔══════════════════════════════════════════════════════════════════════════════╗
-  ║  Splunk Enterprise 10.4  ·  VM 206  ·  192.168.10.50                         ║
-  ╠══════════════════════════════════════════════════════════════════════════════╣
-  ║  index=wineventlog    Security + System events        ←  Splunk UF           ║
-  ║  index=sysmon         Sysmon EventCodes 1/3/7/10/11   ←  Splunk UF          ║
-  ║  index=linux_secure   SSH auth.log                    ←  rsyslog + UF       ║
-  ║  index=opnsense       filterlog + Suricata alerts     ←  OPNsense UDP 514   ║
-  ║  index=wazuh          EDR alerts                      ←  Wazuh HEC          ║
-  ╚══════════════════════════════════════════════════════════════════════════════╝
-                                      │
-                            Splunk Web · :8000
-                                      │
-                                      ▼
-                       ╔══════════════════════════════╗
-                       ║        SOC Analyst            ║
-                       ║    Detection Engineering      ║
-                       ║      Threat Hunting           ║
-                       ╚══════════════════════════════╝
-
-                                                    ___  __   _  _  _____ ___ 
-                                                   / __||  | | \| ||_   _|_ _|
-                                                   \__ \| || | .` | | |  | | 
-                                                   |___/|__/ |_|\_| |_| |___|
-```
+| Layer | Role |
+|---|---|
+| Wazuh EDR | Host-based alerts — agents on win-dc, win-target, and Linux hosts |
+| Splunk Enterprise | SPL search across wineventlog, linux_secure, opnsense, zeek indexes |
+| Security Onion | Second, license-free SIEM/NSM — own Elasticsearch/Kibana, Zeek, and Suricata |
+| Suricata (OPNsense) | Inline network IDS at every inter-VLAN boundary |
+| Zeek NSM | Full traffic metadata via hardware SPAN |
+| n8n + IRIS | SOAR automation and case management |
 
 ---
 
-## VM Inventory
+## Recent Operational Work
 
-| VM ID | Name | Role | Bridge | Static IP |
-|---|---|---|---|---|
-| 201 | opnsense | Firewall / Suricata IDS | vmbr0 + vmbr1 + vmbr2 | 192.168.10.1 (LAN), 192.168.20.1 (OPT1) |
-| 206 | splunk | Splunk Enterprise 10.4.0 (Ubuntu 26.04) | vmbr1 | 192.168.10.50 |
-| 207 | win-target | Windows Server 2025 Eval | vmbr1 | 192.168.10.10 |
-| 203 | purple-voldemort | Kali Purple (Linux SSH target) | vmbr1 | 192.168.10.181 |
-| 202 | voldemort | Kali Linux (attacker) | vmbr2 | 192.168.20.100 |
+The lab went down and came back up across a full verification pass — every VLAN and host checked live, not assumed healthy. That surfaced two real infrastructure problems, both found and fixed in the process of standing up [Security Onion](../security-onion/) as a second detection platform:
 
----
+- A standalone Zeek sensor had silently crashed 25 days earlier — found via stale log timestamps, fixed, confirmed with fresh capture.
+- A Proxmox node's 3.5TB physical disk was invisible to the hypervisor — its LVM-thin pool was never registered as usable storage. Recovered and consolidated.
 
-## Build Steps
-
-### 1. Proxmox Network Bridges
-
-Created two additional Linux bridges beyond the default management bridge:
-
-| Bridge | IP | Purpose |
-|---|---|---|
-| vmbr1 | (none — OPNsense owns 192.168.10.1) | Lab LAN |
-| vmbr2 | (none — OPNsense owns 192.168.20.1) | Attacker VLAN |
-
-### 2. OPNsense (VM 201)
-
-- 3 NICs: `vtnet0` → vmbr0 (WAN, DHCP from home router), `vtnet1` → vmbr1 (LAN), `vtnet2` → vmbr2 (OPT1)
-- UEFI (OVMF) BIOS, Secure Boot disabled (not supported by OPNsense), VirtIO SCSI + VirtIO Block disk, Qemu Guest Agent enabled
-- LAN: 192.168.10.1/24, DHCP pool 192.168.10.100–200
-- OPT1: 192.168.20.1/24 (Kali attacker uses a static IP — OPT1 DHCP had a Kea quirk and was abandoned)
-
-**Firewall rules:**
-- OPT1 → LAN: allow TCP 22 (SSH), 445 (SMB), 3389 (RDP) — logged
-- OPT1 → LAN: block everything else — logged
-- LAN → any: allow outbound (default)
-
-**Suricata IDS:**
-- Enabled on both LAN and OPT1 interfaces, PCAP IDS mode
-- ET Open rulesets: exploit, exploit_kit, malware, policy, scan, attack_response, netbios, remote_access, shellcode
-
-**Syslog forwarding:**
-- System → Logging/Targets → UDP → 192.168.10.50:514
-- Confirmed working — `filterlog` events flow into `index=opnsense`, sourcetype `syslog` ([proof](screenshots/opnsense-syslog-confirmed.png))
-
-Full step-by-step console/GUI build log: [`opnsense-build-log.md`](opnsense-build-log.md)
-
-### 3. Splunk Enterprise (VM 206)
-
-- Ubuntu 26.04 Server, hostname `splunk`, static IP 192.168.10.50
-- Splunk Enterprise 10.4.0 installed via `.deb` package, running with `--run-as-root`
-- Boot-start enabled, Web UI on port 8000
-- Indexes created: `wineventlog` (10 GB), `linux_secure` (10 GB), `opnsense` (10 GB) ([proof](screenshots/splunk-indexes-created.png))
-- UDP 514 input configured: sourcetype `syslog` → index `opnsense`
-
-### 4. Windows Server 2025 Target (VM 207)
-
-- Windows Server 2025 Standard Evaluation, VirtIO drivers (NetKVM, viostor, vioserial), Qemu Guest Agent
-- Static IP 192.168.10.10, hostname `win-target`
-- RDP enabled; Windows Firewall and Defender real-time protection disabled (lab-only — no internet exposure on this VLAN)
-- Splunk Universal Forwarder installed, forwarding the Security and System event logs to `index=wineventlog`
-
-### 5. Kali Purple — Linux Target (VM 203)
-
-- Static IP 192.168.10.181
-- Kali doesn't ship with rsyslog by default (relies on journald) — installed and enabled rsyslog to get a traditional `/var/log/auth.log`
-- Splunk Universal Forwarder installed, monitoring `/var/log/auth.log` → `index=linux_secure`
-
-### 6. Kali Attacker (VM 202)
-
-- Moved to `vmbr2` (attacker VLAN), static IP 192.168.20.100, gateway 192.168.20.1
-- Confirmed SSH from Kali → Splunk works through the OPNsense firewall rules before running any attacks
+Full writeup, including the Security Onion install itself: [`security-onion/`](../security-onion/)
 
 ---
 
-## Related
+## Related Projects
 
-- [`credential-attack-detection/`](../credential-attack-detection/) — the attack simulation and validated SPL detections built on top of this infrastructure
-- [`future-work/`](../future-work/) — firewall/IDS-layer detections written against this OPNsense + Suricata setup but not yet exercised against live traffic
+- [`security-onion/`](../security-onion/) — second SIEM/NSM platform, license-free, plus the operational fixes above
+- [`ot-ics-lab/`](../ot-ics-lab/) — Purdue-model OT/ICS build (GRFICSv2 + OpenPLC + ScadaBR)
+- [`ad-privesc-lab/`](../ad-privesc-lab/) — AD attack chain validated across this infrastructure's detection stack
+- [`credential-attack-detection/`](../credential-attack-detection/) — brute force / spray detection across Windows and Linux targets
